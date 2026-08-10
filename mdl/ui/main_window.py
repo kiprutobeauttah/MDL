@@ -55,7 +55,7 @@ class StatusBar(QWidget):
         """Update status display."""
         if state == DeviceState.CONNECTED or state == DeviceState.MONITORING:
             self.status_indicator.setStyleSheet(f"color: {config.accent_green}; font-size: 12px;")
-            self.status_label.setText(f"{device_name} — Connected")
+            self.status_label.setText(f"{device_name} - Connected")
         elif state == DeviceState.CONNECTING:
             self.status_indicator.setStyleSheet(f"color: {config.accent_yellow}; font-size: 12px;")
             self.status_label.setText("Connecting...")
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("MDL — Mobile Diagnostic Lab")
+        self.setWindowTitle("MDL - Mobile Diagnostic Lab")
         self.setMinimumSize(900, 700)
         self.resize(1000, 750)
         
