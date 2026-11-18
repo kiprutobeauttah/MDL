@@ -4,78 +4,109 @@
 
 *Beauttah K.*
 
-MDL connects to Android devices through USB or Wireless Debugging, continuously collects telemetry, and presents it through a  real-time desktop interface.
+MDL connects to Android devices through USB or Wireless Debugging, continuously collects telemetry, and presents it through a real-time desktop interface.
 
+Built with **Rust**, **Tauri v2**, and a lightweight HTML/CSS/JavaScript frontend.
 
+## Requirements
 
-
-## Installation Guide
-
-### Requirements
-
-- Python 3.12+
+- Rust 1.77+
+- Node.js 18+
 - ADB (Android Debug Bridge)
 - Android device with USB debugging enabled
-### clone Repository
-```bash
 
-git clone https://github.com/kiprutobeauttah/MDL.git
+On Linux, Tauri also requires the WebKitGTK and GTK development packages (for example `libwebkit2gtk-4.1-dev` and `libgtk-3-dev` on Debian-based distributions).
 
-```
-### Setup 
+## Setup
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Install the Tauri CLI locally
+npm install
 
-# Or use pip with pyproject.toml
-pip install -e .
-```
-
-### Verify ADB
-
-```bash
-# Check ADB is working
+# Verify ADB is working
 adb devices
 
-# Should show your connected device
-# --------------------------
-# List of devices attached
-# XXXXXXXXXX      device
-# --------------------------
-
+# Run the desktop app in development mode
+npm run tauri dev
 ```
 
-## Launch
+Build a release bundle:
 
 ```bash
-# Launch MDL
-python app.py
+npm run tauri build
 ```
+
+The release binary can also be compiled directly:
+
+```bash
+cd src-tauri
+cargo build --release
+```
+
 ## Android setup
+
 1. Connect your Android device via USB
 2. Enable USB debugging
 3. Click **Refresh** to detect devices
 4. Select your device and click **Connect**
 5. Dashboard shows live metrics
 
+## Verify ADB
+
+```bash
+adb devices
+```
+
+A working connection looks like:
+
+```text
+List of devices attached
+XXXXXXXXXX      device
+```
+
 ## Interface
 
-> > List of devices detected
+> List of devices detected
 
 ![List-of-devices](.img/interface1.png)
 
-
->> Informative ui
+> Informative UI
 
 ![main-ui](.img/interface2.png)
 
----
+## Architecture
 
+The Tauri backend shells out to the `adb` binary and runs collectors on a background thread. Metrics are emitted to the frontend over Tauri events.
 
+```text
+ADB → Collectors → Metric events → Web UI
+```
 
+Rust sources live in `src-tauri/src/`, and the frontend lives in `web/`.
 
-MDL - Mobile Diagnostic Lab -**Beauttah K.**
+Collectors currently cover device information, battery, performance, network diagnostics, Wi-Fi, cellular, Bluetooth, and installed applications.
+
+## Legacy Python implementation
+
+The original PySide6 implementation is preserved in `app.py` and the `mdl/` package. It can still be run with:
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+## Contributing
+
+Contributions are welcome! MDL v0.1 is the foundation with an extensible collector architecture. Feel free to:
+- Add new collectors (Wi-Fi signal analysis, cellular metrics, sensors, etc.)
+- Improve visualizations
+- Enhance the UI
+- Fix bugs
+- Add documentation
+
+Each collector follows the pattern: `Collector → Metric Bus → Analytics → UI`
+
+_More features to be integrated later ..._
 
 ## License
 
@@ -94,21 +125,7 @@ See the [LICENSE](LICENSE) file for full details or visit [https://creativecommo
 
 When using or building upon MDL, please provide attribution:
 
-```
+```text
 Based on MDL (Mobile Diagnostic Lab) by Beauttah K.
 Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
 ```
-
-## Contributing
-
-Contributions are welcome! MDL v0.1 is the foundation with an extensible collector architecture. Feel free to:
-- Add new collectors (Wi-Fi signal analysis, cellular metrics, sensors, etc.)
-- Improve visualizations
-- Enhance the UI
-- Fix bugs
-- Add documentation
-
-Each collector follows the pattern: `Collector → Metric Bus → Analytics → UI`
-
-
-_More features to be intergrated later ..._

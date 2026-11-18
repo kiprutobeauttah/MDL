@@ -42,3 +42,10 @@ Thumbs.db
 
 # PyInstaller
 *.spec
+
+# Rust / Tauri
+target/
+src-tauri/target/
+src-tauri/gen/schemas/
+node_modules/
+dist/

@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MDL - Mobile Diagnostic Lab</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="main-area">
+        <section id="connection-screen" class="screen">
+          <div class="connection-panel">
+            <h1 class="page-title">CONNECT DEVICE</h1>
+            <p class="muted">Connect an Android device via USB or Wireless Debugging</p>
+
+            <p class="section-label">AVAILABLE DEVICES</p>
+            <div id="device-list" class="list-card hidden"></div>
+            <div id="device-empty" class="list-card empty-state">
+              No devices detected<br /><br />
+              Make sure:<br />
+              • ADB is running<br />
+              • USB debugging is enabled<br />
+              • Device is authorized
+            </div>
+
+            <div class="row-actions">
+              <span id="connection-message" class="muted"></span>
+              <button id="refresh-btn" class="btn">Refresh</button>
+              <button id="connect-btn" class="btn" disabled>Connect</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="app-screen" class="screen hidden">
+          <aside id="sidebar">
+            <div class="brand">MDL</div>
+            <div class="brand-sub">Mobile Diagnostic Lab</div>
+
+            <nav id="nav">
+              <button class="nav-btn active" data-view="overview" data-icon="home">Overview</button>
+              <div class="nav-sep"></div>
+
+              <div class="nav-section">NETWORK</div>
+              <button class="nav-btn" data-view="network" data-icon="activity">Network</button>
+              <button class="nav-btn" data-view="wifi" data-icon="wifi">Wi-Fi</button>
+              <button class="nav-btn" data-view="cellular" data-icon="smartphone">Cellular</button>
+              <button class="nav-btn" data-view="bluetooth" data-icon="bluetooth">Bluetooth</button>
+
+              <div class="nav-sep"></div>
+              <div class="nav-section">DEVICE</div>
+              <button class="nav-btn" data-view="apps" data-icon="package">Applications</button>
+              <button class="nav-btn" data-view="sensors" data-icon="compass">Sensors</button>
+              <button class="nav-btn" data-view="battery" data-icon="battery">Battery</button>
+              <button class="nav-btn" data-view="performance" data-icon="cpu">Performance</button>
+              <button class="nav-btn" data-view="storage" data-icon="hard-drive">Storage</button>
+              <button class="nav-btn" data-view="settings" data-icon="settings">Settings</button>
+
+              <div class="nav-sep"></div>
+              <div class="nav-section">ANALYSIS</div>
+              <button class="nav-btn" data-view="sessions" data-icon="bar-chart-2">Sessions</button>
+              <button class="nav-btn" data-view="events" data-icon="file-text">Events</button>
+              <button class="nav-btn" data-view="alerts" data-icon="alert-triangle">Alerts</button>
+            </nav>
+          </aside>
+
+          <main id="content">
+            <section class="view active" id="view-overview">
+              <h1 class="page-title">OVERVIEW</h1>
+
+              <div class="metric-grid two">
+                <div class="metric-card">
+                  <div class="metric-label">BATTERY</div>
+                  <div class="metric-value" id="ov-battery">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">CPU</div>
+                  <div class="metric-value" id="ov-cpu">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">RAM</div>
+                  <div class="metric-value" id="ov-ram">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">STORAGE</div>
+                  <div class="metric-value" id="ov-storage">--</div>
+                </div>
+              </div>
+
+              <div class="card device-card">
+                <div class="section-label">DEVICE</div>
+                <div id="ov-device-name" class="device-name">No device connected</div>
+                <div id="ov-android" class="muted"></div>
+                <div class="details-grid" id="ov-details">
+                  <div class="detail-label">Serial</div>
+                  <div class="detail-value" data-detail="serial">--</div>
+                  <div class="detail-label">Build</div>
+                  <div class="detail-value" data-detail="build">--</div>
+                  <div class="detail-label">Security Patch</div>
+                  <div class="detail-value" data-detail="security_patch">--</div>
+                  <div class="detail-label">CPU Architecture</div>
+                  <div class="detail-value" data-detail="cpu_arch">--</div>
+                  <div class="detail-label">Uptime</div>
+                  <div class="detail-value" data-detail="uptime">--</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-battery">
+              <h1 class="page-title">BATTERY</h1>
+
+              <div class="metric-grid two compact">
+                <div class="metric-card">
+                  <div class="metric-label">LEVEL</div>
+                  <div class="metric-value" id="bat-level">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">TEMPERATURE</div>
+                  <div class="metric-value" id="bat-temp">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">VOLTAGE</div>
+                  <div class="metric-value" id="bat-voltage">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">STATUS</div>
+                  <div class="metric-value" id="bat-status">--</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="section-label">CHARGE LEVEL</div>
+                <div class="progress">
+                  <div id="battery-progress" class="progress-fill green" style="width: 0%"></div>
+                  <span id="battery-progress-label" class="progress-label">0%</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="details-grid" id="battery-details">
+                  <div class="detail-label">Health</div>
+                  <div class="detail-value" data-detail="health">--</div>
+                  <div class="detail-label">Technology</div>
+                  <div class="detail-value" data-detail="technology">--</div>
+                  <div class="detail-label">Plugged</div>
+                  <div class="detail-value" data-detail="plugged">--</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-performance">
+              <h1 class="page-title">PERFORMANCE</h1>
+
+              <div class="metric-grid three">
+                <div class="metric-card">
+                  <div class="metric-label">CPU</div>
+                  <div class="metric-value" id="perf-cpu">--</div>
+                  <div class="mini-progress"><div id="perf-cpu-bar" class="mini-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">RAM</div>
+                  <div class="metric-value" id="perf-ram">--</div>
+                  <div class="mini-progress"><div id="perf-ram-bar" class="mini-fill" style="width: 0%"></div></div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">STORAGE</div>
+                  <div class="metric-value" id="perf-storage">--</div>
+                  <div class="mini-progress"><div id="perf-storage-bar" class="mini-fill" style="width: 0%"></div></div>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="section-label">CPU USAGE (%)</div>
+                <div class="chart-wrap"><canvas id="chart-cpu"></canvas></div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="section-label">RAM USAGE (MB)</div>
+                <div class="chart-wrap"><canvas id="chart-ram"></canvas></div>
+              </div>
+            </section>
+
+            <section class="view" id="view-network">
+              <h1 class="page-title">NETWORK DIAGNOSTICS</h1>
+
+              <div class="network-top">
+                <div class="card health-card">
+                  <div class="section-label">NETWORK HEALTH</div>
+                  <div id="net-health-score" class="health-score">--</div>
+                  <div id="net-health-status" class="health-status">Unknown</div>
+                </div>
+
+                <div class="metric-grid two compact grow">
+                  <div class="metric-card">
+                    <div class="metric-label">LATENCY</div>
+                    <div class="metric-value" id="net-latency">--</div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-label">PACKET LOSS</div>
+                    <div class="metric-value" id="net-loss">--</div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-label">DOWNLOAD</div>
+                    <div class="metric-value" id="net-rx">--</div>
+                  </div>
+                  <div class="metric-card">
+                    <div class="metric-label">UPLOAD</div>
+                    <div class="metric-value" id="net-tx">--</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="section-label">LATENCY (ms)</div>
+                <div class="chart-wrap"><canvas id="chart-latency"></canvas></div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="chart-head">
+                  <div class="section-label">THROUGHPUT (KB/s)</div>
+                  <div class="legend">
+                    <span class="legend-dot green"></span>Download
+                    <span class="legend-dot red"></span>Upload
+                  </div>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-throughput"></canvas></div>
+              </div>
+            </section>
+
+            <section class="view" id="view-wifi">
+              <div class="page-header">
+                <h1 class="page-title">WI-FI</h1>
+                <span id="wifi-status" class="status-text">● Disconnected</span>
+              </div>
+
+              <div class="card">
+                <div class="section-label">CONNECTION</div>
+                <div id="wifi-ssid" class="device-name">--</div>
+                <div class="details-grid" id="wifi-details">
+                  <div class="detail-label">BSSID</div>
+                  <div class="detail-value" data-detail="bssid">--</div>
+                  <div class="detail-label">Frequency</div>
+                  <div class="detail-value" data-detail="frequency">--</div>
+                  <div class="detail-label">Channel</div>
+                  <div class="detail-value" data-detail="channel">--</div>
+                  <div class="detail-label">IP Address</div>
+                  <div class="detail-value" data-detail="ip_address">--</div>
+                </div>
+              </div>
+
+              <div class="metric-grid two compact">
+                <div class="metric-card">
+                  <div class="metric-label">RSSI</div>
+                  <div class="metric-value" id="wifi-rssi">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">LINK SPEED</div>
+                  <div class="metric-value" id="wifi-speed">--</div>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="section-label">SIGNAL STRENGTH (dBm)</div>
+                <div class="chart-wrap"><canvas id="chart-wifi-signal"></canvas></div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="section-label">LINK SPEED (Mbps)</div>
+                <div class="chart-wrap"><canvas id="chart-wifi-speed"></canvas></div>
+              </div>
+            </section>
+
+            <section class="view" id="view-cellular">
+              <div class="page-header">
+                <h1 class="page-title">CELLULAR</h1>
+                <span id="cell-network-type" class="status-text accent">--</span>
+              </div>
+
+              <div class="card">
+                <div class="section-label">NETWORK OPERATOR</div>
+                <div id="cell-operator" class="device-name">--</div>
+                <div class="details-grid" id="cell-details">
+                  <div class="detail-label">MCC/MNC</div>
+                  <div class="detail-value" data-detail="mcc_mnc">--</div>
+                  <div class="detail-label">Network State</div>
+                  <div class="detail-value" data-detail="state">--</div>
+                  <div class="detail-label">Data State</div>
+                  <div class="detail-value" data-detail="data_state">--</div>
+                  <div class="detail-label">Roaming</div>
+                  <div class="detail-value" data-detail="roaming">--</div>
+                </div>
+              </div>
+
+              <div class="metric-grid two compact">
+                <div class="metric-card">
+                  <div class="metric-label">RSRP</div>
+                  <div class="metric-value" id="cell-rsrp">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">RSRQ</div>
+                  <div class="metric-value" id="cell-rsrq">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">RSSI</div>
+                  <div class="metric-value" id="cell-rssi">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">SINR</div>
+                  <div class="metric-value" id="cell-sinr">--</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="section-label">SERVING CELL</div>
+                <div class="details-grid" id="cell-serving">
+                  <div class="detail-label">Cell ID</div>
+                  <div class="detail-value" data-detail="cell_id">--</div>
+                  <div class="detail-label">TAC</div>
+                  <div class="detail-value" data-detail="tac">--</div>
+                  <div class="detail-label">PCI</div>
+                  <div class="detail-value" data-detail="pci">--</div>
+                  <div class="detail-label">Band</div>
+                  <div class="detail-value" data-detail="band">--</div>
+                </div>
+              </div>
+
+              <div class="card chart-card">
+                <div class="chart-head">
+                  <div class="section-label">SIGNAL QUALITY</div>
+                  <div class="legend">
+                    <span class="legend-dot green"></span>RSRP
+                    <span class="legend-dot red"></span>RSRQ
+                  </div>
+                </div>
+                <div class="chart-wrap"><canvas id="chart-cellular"></canvas></div>
+              </div>
+            </section>
+
+            <section class="view" id="view-bluetooth">
+              <div class="page-header">
+                <h1 class="page-title">BLUETOOTH</h1>
+                <span id="bt-status" class="status-text">● Disabled</span>
+              </div>
+
+              <div class="card">
+                <div class="section-label">ADAPTER</div>
+                <div class="details-grid" id="bt-details">
+                  <div class="detail-label">Address</div>
+                  <div class="detail-value" data-detail="adapter_address">--</div>
+                  <div class="detail-label">Name</div>
+                  <div class="detail-value" data-detail="adapter_name">--</div>
+                  <div class="detail-label">State</div>
+                  <div class="detail-value" data-detail="adapter_state">--</div>
+                </div>
+              </div>
+
+              <div class="list-head">
+                <div class="section-label">DEVICES</div>
+                <span id="bt-count" class="muted">0 devices</span>
+              </div>
+              <div id="bt-list" class="list-card"></div>
+            </section>
+
+            <section class="view" id="view-apps">
+              <div class="page-header">
+                <h1 class="page-title">APPLICATIONS</h1>
+                <span id="apps-count" class="muted">0 apps</span>
+              </div>
+
+              <div class="search-row">
+                <input id="apps-search" class="input" type="text" placeholder="Search applications..." />
+                <button id="apps-refresh" class="btn">Refresh</button>
+              </div>
+
+              <div id="apps-list" class="list-card tall"></div>
+            </section>
+
+            <section class="view" id="view-sensors">
+              <h1 class="page-title">SENSORS</h1>
+              <p class="muted">Available device sensors with live readings</p>
+              <div id="sensors-grid" class="sensor-grid"></div>
+            </section>
+
+            <section class="view" id="view-storage">
+              <h1 class="page-title">STORAGE</h1>
+
+              <div class="card">
+                <div class="section-label">INTERNAL STORAGE</div>
+                <div class="storage-usage">
+                  <span id="storage-used" class="storage-used">-- GB</span>
+                  <span class="muted">of</span>
+                  <span id="storage-total" class="storage-total">-- GB</span>
+                </div>
+                <div class="progress tall">
+                  <div id="storage-progress" class="progress-fill" style="width: 0%"></div>
+                  <span id="storage-progress-label" class="progress-label">0%</span>
+                </div>
+              </div>
+
+              <p class="muted small">Storage information is collected from the device's file system</p>
+            </section>
+
+            <section class="view" id="view-settings">
+              <h1 class="page-title">SETTINGS</h1>
+              <p class="muted">Read-only view of device system settings</p>
+
+              <div class="card settings-group">
+                <div class="section-label">DISPLAY</div>
+                <div class="details-grid">
+                  <div class="detail-label">Brightness</div>
+                  <div class="detail-value">Auto</div>
+                  <div class="detail-label">Screen Timeout</div>
+                  <div class="detail-value">30 seconds</div>
+                  <div class="detail-label">Dark Mode</div>
+                  <div class="detail-value">Enabled</div>
+                </div>
+              </div>
+
+              <div class="card settings-group">
+                <div class="section-label">SOUND</div>
+                <div class="details-grid">
+                  <div class="detail-label">Media Volume</div>
+                  <div class="detail-value">70%</div>
+                  <div class="detail-label">Ring Volume</div>
+                  <div class="detail-value">80%</div>
+                  <div class="detail-label">Notification Volume</div>
+                  <div class="detail-value">60%</div>
+                </div>
+              </div>
+
+              <div class="card settings-group">
+                <div class="section-label">DEVELOPER</div>
+                <div class="details-grid">
+                  <div class="detail-label">USB Debugging</div>
+                  <div class="detail-value">Enabled</div>
+                  <div class="detail-label">Stay Awake</div>
+                  <div class="detail-value">Disabled</div>
+                  <div class="detail-label">Show Taps</div>
+                  <div class="detail-value">Disabled</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-sessions">
+              <div class="page-header">
+                <h1 class="page-title">SESSIONS</h1>
+                <span id="sessions-count" class="muted">0 sessions</span>
+              </div>
+              <p class="muted">Monitoring sessions record device metrics for later analysis and replay</p>
+
+              <div class="row-actions start">
+                <button class="btn" id="new-session-btn">New Session</button>
+                <button class="btn" id="export-session-btn">Export</button>
+              </div>
+
+              <div id="sessions-list" class="list-card tall"></div>
+            </section>
+
+            <section class="view" id="view-events">
+              <div class="page-header">
+                <h1 class="page-title">EVENTS</h1>
+                <span id="events-count" class="muted">0 events</span>
+              </div>
+
+              <div class="search-row">
+                <input id="events-search" class="input" type="text" placeholder="Search events..." />
+                <select id="events-category" class="input select">
+                  <option value="all categories">All Categories</option>
+                  <option value="device">Device</option>
+                  <option value="network">Network</option>
+                  <option value="battery">Battery</option>
+                  <option value="performance">Performance</option>
+                  <option value="sensor">Sensor</option>
+                </select>
+              </div>
+
+              <div id="events-list" class="list-card tall"></div>
+            </section>
+
+            <section class="view" id="view-alerts">
+              <div class="page-header">
+                <h1 class="page-title">ALERTS</h1>
+                <button class="btn" id="new-alert-btn">+ New Alert</button>
+              </div>
+              <p class="muted">Configure alerts for device metrics and network conditions</p>
+
+              <div class="metric-grid two">
+                <div class="alert-card">
+                  <div class="alert-head">
+                    <span class="alert-name">Low Battery</span>
+                    <span class="severity warning">WARNING</span>
+                  </div>
+                  <p class="muted">Battery level &lt; 20%</p>
+                  <span class="status-text success">● Active</span>
+                </div>
+
+                <div class="alert-card">
+                  <div class="alert-head">
+                    <span class="alert-name">High Temperature</span>
+                    <span class="severity critical">CRITICAL</span>
+                  </div>
+                  <p class="muted">Battery temp &gt; 40°C</p>
+                  <span class="status-text success">● Active</span>
+                </div>
+
+                <div class="alert-card">
+                  <div class="alert-head">
+                    <span class="alert-name">Poor Wi-Fi Signal</span>
+                    <span class="severity warning">WARNING</span>
+                  </div>
+                  <p class="muted">Wi-Fi RSSI &lt; -70 dBm</p>
+                  <span class="status-text success">● Active</span>
+                </div>
+
+                <div class="alert-card">
+                  <div class="alert-head">
+                    <span class="alert-name">High Latency</span>
+                    <span class="severity info">INFO</span>
+                  </div>
+                  <p class="muted">Network latency &gt; 100ms</p>
+                  <span class="status-text success">● Active</span>
+                </div>
+              </div>
+            </section>
+          </main>
+        </section>
+      </div>
+
+      <footer id="status-bar">
+        <span id="status-dot" class="status-dot">●</span>
+        <span id="status-text">No device</span>
+        <span class="spacer"></span>
+        <span class="version">v0.1.0 by Beauttah K.</span>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
