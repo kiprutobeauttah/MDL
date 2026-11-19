@@ -1,1 +1,0 @@
-"""ADB communication layer."""

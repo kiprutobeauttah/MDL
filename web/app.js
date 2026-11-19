@@ -13,7 +13,141 @@ const ICONS = {
   "bar-chart-2": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
   "file-text": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
   "alert-triangle": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+  terminal: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>`,
+  folder: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
+  file: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`,
+  image: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`,
 };
+
+const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "svg", "avif"]);
+
+const SHELL_COMMANDS = [
+  {
+    category: "Device & system",
+    command: "getprop ro.product.model",
+    description: "Show the device model name.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.build.version.release",
+    description: "Show the Android OS version.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.build.version.sdk",
+    description: "Show the Android API level (SDK number).",
+  },
+  {
+    category: "Device & system",
+    command: "uname -a",
+    description: "Show kernel and system architecture details.",
+  },
+  {
+    category: "Device & system",
+    command: "uptime",
+    description: "Show how long the device has been running and its load averages.",
+  },
+  {
+    category: "Device & system",
+    command: "wm size",
+    description: "Show the physical and override display resolution.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys battery",
+    description: "Show battery level, temperature, voltage, charging status, and health.",
+  },
+  {
+    category: "Battery & power",
+    command: "settings get system screen_brightness",
+    description: "Read the current screen brightness setting.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys meminfo",
+    description: "Show detailed memory usage for the system and running apps.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys cpuinfo",
+    description: "Show CPU usage by process.",
+  },
+  {
+    category: "Performance",
+    command: "top -n 1 -b | head -n 20",
+    description: "Take a single snapshot of the busiest processes.",
+  },
+  {
+    category: "Performance",
+    command: "df -h",
+    description: "Show storage usage for mounted filesystems in human-readable units.",
+  },
+  {
+    category: "Network",
+    command: "ip addr show wlan0",
+    description: "Show the Wi-Fi interface IP address and network details.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys wifi",
+    description: "Show Wi-Fi connection state, signal strength, and link speed.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys telephony.registry",
+    description: "Show cellular network type, signal strength, and operator details.",
+  },
+  {
+    category: "Network",
+    command: "ping -c 4 8.8.8.8",
+    description: "Test internet connectivity and measure round-trip latency.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys bluetooth_manager",
+    description: "Show Bluetooth adapter state and bonded devices.",
+  },
+  {
+    category: "Applications",
+    command: "pm list packages",
+    description: "List all installed package names.",
+  },
+  {
+    category: "Applications",
+    command: "pm list packages -3",
+    description: "List only third-party (user-installed) packages.",
+  },
+  {
+    category: "Applications",
+    command: "pm path <package>",
+    description: "Show the APK path for a package. Replace <package> with a package name.",
+  },
+  {
+    category: "Files",
+    command: "ls -la /sdcard",
+    description: "List files in the shared internal storage.",
+  },
+  {
+    category: "Files",
+    command: "ls -la /data/local/tmp",
+    description: "List files in the temporary shell workspace.",
+  },
+  {
+    category: "Files",
+    command: "du -sh /sdcard/DCIM",
+    description: "Show the total size of the camera folder.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "logcat -d -t 200",
+    description: "Print the 200 most recent system log lines and exit.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "dumpsys activity activities | head -n 40",
+    description: "Show the current activity stack summary.",
+  },
+];
 
 const CHARTS = [];
 
@@ -31,6 +165,14 @@ const state = {
   storageUsed: 0,
   storageTotal: 0,
   batteryLevel: null,
+  shellHistory: [],
+  shellHistoryIndex: 0,
+  shellBusy: false,
+  shellMode: "terminal",
+  fsPath: "/",
+  fsEntries: [],
+  fsLoaded: false,
+  fsBusy: false,
   charts: {},
 };
 
@@ -302,6 +444,10 @@ function setView(view) {
   $("#content").scrollTop = 0;
   if (view === "apps") {
     loadApps();
+  } else if (view === "shell") {
+    focusShellInput();
+  } else if (view === "filesystem" && !state.fsLoaded) {
+    loadDirectory(state.fsPath);
   }
   requestAnimationFrame(renderAllCharts);
 }
@@ -436,6 +582,785 @@ function setupSearch() {
   $("#apps-refresh").addEventListener("click", () => loadApps(true));
   $("#events-search").addEventListener("input", scheduleEventsRender);
   $("#events-category").addEventListener("change", scheduleEventsRender);
+}
+
+function setupShell() {
+  $("#shell-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    runShellCommand("terminal");
+  });
+
+  $("#shell-gui-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+    runShellCommand("gui");
+  });
+
+  $("#shell-clear").addEventListener("click", clearShellTerminal);
+  $("#shell-gui-clear").addEventListener("click", clearShellGui);
+
+  $("#shell-input").addEventListener("keydown", (event) => {
+    if (event.key === "ArrowUp") {
+      if (state.shellHistory.length === 0) {
+        return;
+      }
+      event.preventDefault();
+      state.shellHistoryIndex = Math.max(0, state.shellHistoryIndex - 1);
+      $("#shell-input").value = state.shellHistory[state.shellHistoryIndex] || "";
+    } else if (event.key === "ArrowDown") {
+      if (state.shellHistory.length === 0) {
+        return;
+      }
+      event.preventDefault();
+      state.shellHistoryIndex = Math.min(
+        state.shellHistory.length,
+        state.shellHistoryIndex + 1
+      );
+      $("#shell-input").value = state.shellHistory[state.shellHistoryIndex] || "";
+    }
+  });
+
+  $$(".segment[data-shell-mode]").forEach((button) => {
+    button.addEventListener("click", () => setShellMode(button.dataset.shellMode));
+  });
+
+  $("#shell-help-btn").addEventListener("click", openShellHelp);
+  $("#shell-help-close").addEventListener("click", closeShellHelp);
+  $("#shell-help").addEventListener("click", (event) => {
+    if (event.target === $("#shell-help")) {
+      closeShellHelp();
+    }
+  });
+  $("#shell-help-search").addEventListener("input", renderShellHelp);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeShellHelp();
+      hideContextMenu();
+    }
+  });
+
+  renderShellHistory();
+}
+
+function setShellMode(mode) {
+  state.shellMode = mode === "gui" ? "gui" : "terminal";
+  $$(".segment[data-shell-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.shellMode === state.shellMode);
+  });
+  $("#shell-terminal-panel").classList.toggle("hidden", state.shellMode !== "terminal");
+  $("#shell-gui-panel").classList.toggle("hidden", state.shellMode !== "gui");
+  if (state.shellMode === "gui") {
+    renderShellHistory();
+  }
+  focusShellInput();
+}
+
+function focusShellInput() {
+  const input = state.shellMode === "gui" ? $("#shell-gui-input") : $("#shell-input");
+  input.focus();
+}
+
+function setShellStatus(text, kind) {
+  const status = $("#shell-status");
+  status.textContent = text;
+  status.className = `status-text ${kind || ""}`.trim();
+}
+
+function appendShellLine(text, className = "") {
+  const output = $("#shell-output");
+  const line = document.createElement("div");
+  line.className = `terminal-line ${className}`.trim();
+  line.textContent = text;
+  output.append(line);
+  output.scrollTop = output.scrollHeight;
+}
+
+function appendShellOutput(text, className) {
+  const limit = 50000;
+  if (text.length <= limit) {
+    appendShellLine(text, className);
+    return;
+  }
+  appendShellLine(text.slice(0, limit), className);
+  appendShellLine(`... output truncated (${text.length} characters)`, "terminal-muted");
+}
+
+function clearShellTerminal() {
+  const output = $("#shell-output");
+  output.innerHTML = "";
+  appendShellLine("Type a command and press Enter.", "terminal-muted");
+  setShellStatus("● Ready", "success");
+  $("#shell-input").focus();
+}
+
+function clearShellGui() {
+  $("#shell-gui-command").textContent = "";
+  $("#shell-gui-state").textContent = "No command run yet";
+  $("#shell-gui-stdout").textContent = "";
+  $("#shell-gui-stderr").textContent = "";
+  $("#shell-gui-stderr").classList.add("hidden");
+  $("#shell-gui-exit").classList.add("hidden");
+  $("#shell-gui-input").focus();
+}
+
+function pushShellHistory(command) {
+  if (state.shellHistory[state.shellHistory.length - 1] !== command) {
+    state.shellHistory.push(command);
+    if (state.shellHistory.length > 50) {
+      state.shellHistory.shift();
+    }
+  }
+  state.shellHistoryIndex = state.shellHistory.length;
+  renderShellHistory();
+}
+
+function renderShellHistory() {
+  const container = $("#shell-history");
+  const count = state.shellHistory.length;
+  $("#shell-history-count").textContent = `${count} command${count === 1 ? "" : "s"}`;
+  container.innerHTML = "";
+
+  if (count === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-list";
+    empty.textContent = "Commands you run will appear here.";
+    container.append(empty);
+    return;
+  }
+
+  for (const command of state.shellHistory.slice().reverse()) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "shell-history-item";
+    item.textContent = command;
+    item.title = "Insert this command";
+    item.addEventListener("click", () => insertShellCommand(command));
+    container.append(item);
+  }
+}
+
+function insertShellCommand(command) {
+  const input = state.shellMode === "gui" ? $("#shell-gui-input") : $("#shell-input");
+  input.value = command;
+  closeShellHelp();
+  input.focus();
+}
+
+async function runShellCommand(source) {
+  const mode = source === "gui" ? "gui" : "terminal";
+  if (state.shellBusy || state.shellMode !== mode) {
+    return;
+  }
+
+  const input = mode === "gui" ? $("#shell-gui-input") : $("#shell-input");
+  const command = input.value.trim();
+  if (!command) {
+    return;
+  }
+
+  pushShellHistory(command);
+  input.value = "";
+  state.shellBusy = true;
+  $("#shell-run").disabled = true;
+  $("#shell-gui-run").disabled = true;
+  $("#shell-clear").disabled = true;
+  $("#shell-gui-clear").disabled = true;
+  setShellStatus("● Running...", "");
+
+  if (mode === "terminal") {
+    appendShellLine(`$ ${command}`, "terminal-command");
+  } else {
+    $("#shell-gui-command").textContent = `$ ${command}`;
+    $("#shell-gui-state").textContent = "Running...";
+    $("#shell-gui-stdout").textContent = "";
+    $("#shell-gui-stdout").classList.remove("hidden");
+    $("#shell-gui-stderr").textContent = "";
+    $("#shell-gui-stderr").classList.add("hidden");
+    $("#shell-gui-exit").classList.add("hidden");
+  }
+
+  try {
+    const result = await invoke("run_shell_command", { command });
+    if (mode === "terminal") {
+      const stdout = String(result.stdout || "").replace(/\n$/, "");
+      const stderr = String(result.stderr || "").replace(/\n$/, "");
+      if (stdout) {
+        appendShellOutput(stdout, "terminal-stdout");
+      }
+      if (stderr) {
+        appendShellOutput(stderr, "terminal-stderr");
+      }
+      if (!stdout && !stderr) {
+        appendShellLine("(no output)", "terminal-muted");
+      }
+      if (result.exit_code !== 0) {
+        appendShellLine(`Exit code: ${result.exit_code}`, "terminal-exit");
+      }
+    } else {
+      renderGuiShellResult(result);
+    }
+    setShellStatus("● Ready", "success");
+  } catch (error) {
+    if (mode === "terminal") {
+      appendShellLine(String(error), "terminal-stderr");
+    } else {
+      renderGuiShellError(String(error));
+    }
+    setShellStatus("● Error", "error");
+  } finally {
+    state.shellBusy = false;
+    $("#shell-run").disabled = false;
+    $("#shell-gui-run").disabled = false;
+    $("#shell-clear").disabled = false;
+    $("#shell-gui-clear").disabled = false;
+    focusShellInput();
+  }
+}
+
+function renderGuiShellResult(result) {
+  const stdout = String(result.stdout || "").replace(/\n$/, "");
+  const stderr = String(result.stderr || "").replace(/\n$/, "");
+  const stdoutElement = $("#shell-gui-stdout");
+  const stderrElement = $("#shell-gui-stderr");
+  const exitElement = $("#shell-gui-exit");
+
+  stdoutElement.textContent = stdout || "(no output)";
+  stdoutElement.classList.remove("hidden");
+  stderrElement.textContent = stderr;
+  stderrElement.classList.toggle("hidden", !stderr);
+  exitElement.textContent = `Exit code: ${result.exit_code}`;
+  exitElement.classList.toggle("hidden", result.exit_code === 0);
+  $("#shell-gui-state").textContent =
+    result.exit_code === 0 ? "Completed" : `Completed with exit code ${result.exit_code}`;
+}
+
+function renderGuiShellError(message) {
+  $("#shell-gui-stdout").textContent = "";
+  $("#shell-gui-stdout").classList.add("hidden");
+  $("#shell-gui-stderr").textContent = message;
+  $("#shell-gui-stderr").classList.remove("hidden");
+  $("#shell-gui-exit").classList.add("hidden");
+  $("#shell-gui-state").textContent = "Failed";
+}
+
+function openShellHelp() {
+  $("#shell-help").classList.remove("hidden");
+  $("#shell-help").setAttribute("aria-hidden", "false");
+  $("#shell-help-search").value = "";
+  renderShellHelp();
+  $("#shell-help-search").focus();
+}
+
+function closeShellHelp() {
+  const help = $("#shell-help");
+  if (!help) {
+    return;
+  }
+  help.classList.add("hidden");
+  help.setAttribute("aria-hidden", "true");
+}
+
+function renderShellHelp() {
+  const list = $("#shell-help-list");
+  const query = $("#shell-help-search").value.trim().toLowerCase();
+  list.innerHTML = "";
+
+  const filtered = SHELL_COMMANDS.filter((item) => {
+    const haystack = `${item.category} ${item.command} ${item.description}`.toLowerCase();
+    return haystack.includes(query);
+  });
+
+  if (filtered.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-list";
+    empty.textContent = "No matching commands";
+    list.append(empty);
+    return;
+  }
+
+  const groups = new Map();
+  for (const item of filtered) {
+    if (!groups.has(item.category)) {
+      groups.set(item.category, []);
+    }
+    groups.get(item.category).push(item);
+  }
+
+  for (const [category, items] of groups) {
+    const heading = document.createElement("div");
+    heading.className = "help-category";
+    heading.textContent = category;
+    list.append(heading);
+
+    for (const item of items) {
+      const row = document.createElement("div");
+      row.className = "help-item";
+
+      const info = document.createElement("div");
+      info.className = "help-info";
+      const command = document.createElement("code");
+      command.className = "help-command";
+      command.textContent = item.command;
+      const description = document.createElement("p");
+      description.className = "help-description";
+      description.textContent = item.description;
+      info.append(command, description);
+
+      const insert = document.createElement("button");
+      insert.type = "button";
+      insert.className = "btn secondary help-insert";
+      insert.textContent = "Insert";
+      insert.addEventListener("click", () => insertShellCommand(item.command));
+
+      row.append(info, insert);
+      list.append(row);
+    }
+  }
+}
+
+function setupFilesystem() {
+  $("#fs-refresh").addEventListener("click", () => loadDirectory(state.fsPath));
+  $("#fs-up").addEventListener("click", () => {
+    if (state.fsPath !== "/") {
+      loadDirectory(parentPath(state.fsPath));
+    }
+  });
+  $("#fs-go").addEventListener("click", () => loadDirectory($("#fs-path").value));
+  $("#fs-path").addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      loadDirectory(event.currentTarget.value);
+    }
+  });
+  $$(".chip[data-fs-path]").forEach((button) => {
+    button.addEventListener("click", () => loadDirectory(button.dataset.fsPath));
+  });
+
+  $("#fs-list").addEventListener("contextmenu", (event) => {
+    const row = event.target.closest(".fs-row");
+    event.preventDefault();
+
+    if (!row) {
+      showFilesystemContextMenu(event.clientX, event.clientY, null);
+      return;
+    }
+
+    const entry = state.fsEntries.find((item) => item.path === row.dataset.path);
+    if (!entry) {
+      return;
+    }
+
+    $$(".fs-row", $("#fs-list")).forEach((item) => item.classList.remove("selected"));
+    row.classList.add("selected");
+    showFilesystemContextMenu(event.clientX, event.clientY, entry);
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("#context-menu")) {
+      hideContextMenu();
+    }
+  });
+  window.addEventListener("blur", hideContextMenu);
+  window.addEventListener("resize", hideContextMenu);
+}
+
+async function loadDirectory(path) {
+  if (state.fsBusy) {
+    return;
+  }
+
+  const target = String(path || "").trim() || "/";
+  state.fsBusy = true;
+  $("#fs-status").textContent = "Loading...";
+  $("#fs-error").textContent = "";
+  $("#fs-refresh").disabled = true;
+  $("#fs-go").disabled = true;
+
+  try {
+    const listing = await invoke("list_directory", { path: target });
+    state.fsPath = listing.path;
+    state.fsEntries = Array.isArray(listing.entries) ? listing.entries : [];
+    state.fsLoaded = true;
+    $("#fs-path").value = listing.path;
+    $("#fs-list").innerHTML = "";
+    renderBreadcrumb(listing.path);
+    renderFilesystem();
+    const count = state.fsEntries.length;
+    $("#fs-status").textContent = `${count} item${count === 1 ? "" : "s"}`;
+    $("#fs-count").textContent = `${count} item${count === 1 ? "" : "s"}`;
+    $("#fs-error").textContent = "";
+  } catch (error) {
+    state.fsEntries = [];
+    state.fsPath = target;
+    $("#fs-path").value = target;
+    renderBreadcrumb(target);
+    $("#fs-list").innerHTML = "";
+    $("#fs-count").textContent = "0 items";
+    $("#fs-status").textContent = "Error";
+    $("#fs-error").textContent = String(error);
+  } finally {
+    state.fsBusy = false;
+    $("#fs-refresh").disabled = false;
+    $("#fs-go").disabled = false;
+    $("#fs-up").disabled = state.fsPath === "/";
+  }
+}
+
+function renderBreadcrumb(path) {
+  const container = $("#fs-breadcrumb");
+  container.innerHTML = "";
+
+  const root = document.createElement("button");
+  root.type = "button";
+  root.className = `fs-crumb${path === "/" ? " active" : ""}`;
+  root.textContent = "Root";
+  root.addEventListener("click", () => {
+    if (path !== "/") {
+      loadDirectory("/");
+    }
+  });
+  container.append(root);
+
+  let current = "";
+  for (const segment of path.split("/").filter(Boolean)) {
+    current += `/${segment}`;
+    const separator = document.createElement("span");
+    separator.className = "fs-sep";
+    separator.textContent = "/";
+    container.append(separator);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `fs-crumb${current === path ? " active" : ""}`;
+    button.textContent = segment;
+    button.addEventListener("click", () => {
+      if (current !== path) {
+        loadDirectory(current);
+      }
+    });
+    container.append(button);
+  }
+}
+
+function renderFilesystem() {
+  const list = $("#fs-list");
+  list.innerHTML = "";
+
+  if (state.fsEntries.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-list";
+    empty.textContent = "This folder is empty";
+    list.append(empty);
+    return;
+  }
+
+  for (const entry of state.fsEntries) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = `fs-row${entry.is_dir ? " is-dir" : ""}`;
+    row.title = entry.path;
+    row.dataset.path = entry.path;
+
+    const isImage = isImageEntry(entry);
+    const nameCell = document.createElement("span");
+    nameCell.className = "fs-name";
+    const icon = document.createElement("span");
+    icon.className = "fs-icon";
+    icon.innerHTML = entry.is_dir ? ICONS.folder : isImage ? ICONS.image : ICONS.file;
+    const name = document.createElement("span");
+    name.className = "fs-name-text";
+    name.textContent = entry.name;
+    nameCell.append(icon, name);
+
+    if (entry.is_link && entry.link_target) {
+      const target = document.createElement("span");
+      target.className = "fs-link-target";
+      target.textContent = `→ ${entry.link_target}`;
+      nameCell.append(target);
+    }
+
+    const size = document.createElement("span");
+    size.className = "fs-size";
+    size.textContent = entry.is_dir ? "—" : formatFileSize(entry.size);
+
+    const modified = document.createElement("span");
+    modified.className = "fs-modified";
+    modified.textContent = entry.modified || "--";
+
+    const permissions = document.createElement("span");
+    permissions.className = "fs-perms";
+    permissions.textContent = entry.permissions || "--";
+
+    row.append(nameCell, size, modified, permissions);
+    row.addEventListener("click", () => {
+      $$(".fs-row", list).forEach((item) => item.classList.remove("selected"));
+      row.classList.add("selected");
+      if (entry.is_dir) {
+        loadDirectory(entry.path);
+      }
+    });
+    if (isImage) {
+      row.title = `${entry.path} — double-click to preview`;
+      row.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        openImagePreview(entry);
+      });
+    }
+    list.append(row);
+  }
+}
+
+function parentPath(path) {
+  const trimmed = String(path || "").replace(/\/+$/, "");
+  if (!trimmed || trimmed === "/") {
+    return "/";
+  }
+  const index = trimmed.lastIndexOf("/");
+  return index <= 0 ? "/" : trimmed.slice(0, index);
+}
+
+function formatFileSize(bytes) {
+  if (typeof bytes !== "number" || !Number.isFinite(bytes) || bytes < 0) {
+    return "--";
+  }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  const units = ["KB", "MB", "GB", "TB"];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  return `${value.toFixed(value >= 10 ? 1 : 2)} ${units[unit]}`;
+}
+
+function isImageEntry(entry) {
+  if (!entry || entry.is_dir) {
+    return false;
+  }
+  const match = /\.([^./]+)$/.exec(entry.name);
+  return Boolean(match && IMAGE_EXTENSIONS.has(match[1].toLowerCase()));
+}
+
+let imagePreviewToken = 0;
+
+function setupImagePreview() {
+  $("#image-preview-close").addEventListener("click", closeImagePreview);
+  $("#image-preview").addEventListener("click", (event) => {
+    if (event.target === $("#image-preview")) {
+      closeImagePreview();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !$("#image-preview").classList.contains("hidden")) {
+      closeImagePreview();
+    }
+  });
+}
+
+function openImagePreview(entry) {
+  if (!isImageEntry(entry)) {
+    return;
+  }
+
+  const token = ++imagePreviewToken;
+  const image = $("#image-preview-image");
+  const loading = $("#image-preview-loading");
+  const error = $("#image-preview-error");
+
+  hideContextMenu();
+  $("#image-preview-title").textContent = entry.name;
+  $("#image-preview-path").textContent = entry.path;
+  image.classList.add("hidden");
+  image.removeAttribute("src");
+  image.alt = entry.name;
+  error.textContent = "";
+  error.classList.add("hidden");
+  loading.textContent = "Loading image...";
+  loading.classList.remove("hidden");
+  $("#image-preview").classList.remove("hidden");
+  $("#image-preview").setAttribute("aria-hidden", "false");
+  $("#image-preview-close").focus();
+
+  invoke("read_image_preview", { path: entry.path })
+    .then((preview) => {
+      if (token !== imagePreviewToken) {
+        return;
+      }
+      image.onload = () => {
+        if (token !== imagePreviewToken) {
+          return;
+        }
+        loading.classList.add("hidden");
+        image.classList.remove("hidden");
+      };
+      image.onerror = () => {
+        if (token !== imagePreviewToken) {
+          return;
+        }
+        image.classList.add("hidden");
+        loading.classList.add("hidden");
+        error.textContent = "Unable to decode this image.";
+        error.classList.remove("hidden");
+      };
+      image.src = `data:${preview.mime};base64,${preview.data}`;
+    })
+    .catch((previewError) => {
+      if (token !== imagePreviewToken) {
+        return;
+      }
+      loading.classList.add("hidden");
+      error.textContent = String(previewError);
+      error.classList.remove("hidden");
+    });
+}
+
+function closeImagePreview() {
+  imagePreviewToken += 1;
+  const overlay = $("#image-preview");
+  if (!overlay || overlay.classList.contains("hidden")) {
+    return;
+  }
+
+  overlay.classList.add("hidden");
+  overlay.setAttribute("aria-hidden", "true");
+  const image = $("#image-preview-image");
+  image.onload = null;
+  image.onerror = null;
+  image.removeAttribute("src");
+  image.classList.add("hidden");
+  $("#image-preview-loading").classList.add("hidden");
+  $("#image-preview-error").classList.add("hidden");
+}
+
+let fsMessageTimer = null;
+
+function showFilesystemContextMenu(x, y, entry) {
+  const menu = $("#context-menu");
+  menu.innerHTML = "";
+
+  const header = document.createElement("div");
+  header.className = "context-header";
+  const title = document.createElement("div");
+  title.className = "context-title";
+  title.textContent = entry ? entry.name : state.fsPath;
+  const meta = document.createElement("div");
+  meta.className = "context-meta";
+  if (entry) {
+    const type = entry.is_dir ? "Folder" : entry.is_link ? "Link" : "File";
+    const size = entry.is_dir ? "" : ` · ${formatFileSize(entry.size)}`;
+    meta.textContent = `${type}${size} · ${entry.modified || "Unknown modified time"}`;
+  } else {
+    const count = state.fsEntries.length;
+    meta.textContent = `${count} item${count === 1 ? "" : "s"}`;
+  }
+  header.append(title, meta);
+  menu.append(header);
+
+  if (entry && entry.is_dir) {
+    addContextMenuItem(menu, "Open folder", () => loadDirectory(entry.path));
+  }
+  addContextMenuItem(menu, entry ? "Copy path" : "Copy current path", () =>
+    copyToClipboard(entry ? entry.path : state.fsPath)
+  );
+  addContextMenuItem(menu, "Refresh", () => loadDirectory(state.fsPath));
+  if (state.fsPath !== "/") {
+    addContextMenuItem(menu, "Go to parent", () => loadDirectory(parentPath(state.fsPath)));
+  }
+
+  menu.classList.remove("hidden");
+  menu.setAttribute("aria-hidden", "false");
+  menu.style.left = "0px";
+  menu.style.top = "0px";
+
+  const rect = menu.getBoundingClientRect();
+  let left = x;
+  let top = y;
+  if (left + rect.width > window.innerWidth - 8) {
+    left = window.innerWidth - rect.width - 8;
+  }
+  if (top + rect.height > window.innerHeight - 8) {
+    top = window.innerHeight - rect.height - 8;
+  }
+  menu.style.left = `${Math.max(8, left)}px`;
+  menu.style.top = `${Math.max(8, top)}px`;
+}
+
+function addContextMenuItem(menu, label, action) {
+  const item = document.createElement("button");
+  item.type = "button";
+  item.className = "context-item";
+  item.setAttribute("role", "menuitem");
+  item.textContent = label;
+  item.addEventListener("click", () => {
+    hideContextMenu();
+    action();
+  });
+  menu.append(item);
+}
+
+function hideContextMenu() {
+  const menu = $("#context-menu");
+  if (!menu || menu.classList.contains("hidden")) {
+    return;
+  }
+  menu.classList.add("hidden");
+  menu.setAttribute("aria-hidden", "true");
+  menu.innerHTML = "";
+}
+
+async function copyToClipboard(text) {
+  let copied = false;
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    }
+  } catch (error) {
+    copied = false;
+  }
+
+  if (!copied) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    area.setAttribute("readonly", "");
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.append(area);
+    area.select();
+    try {
+      copied = document.execCommand("copy");
+    } catch (error) {
+      copied = false;
+    }
+    area.remove();
+  }
+
+  if (copied) {
+    $("#fs-error").textContent = "";
+    showFilesystemMessage("Path copied to clipboard");
+  } else {
+    showFilesystemMessage("Unable to copy path", true);
+  }
+}
+
+function showFilesystemMessage(message, isError = false) {
+  if (isError) {
+    $("#fs-error").textContent = message;
+    return;
+  }
+
+  const count = state.fsEntries.length;
+  $("#fs-status").textContent = message;
+  clearTimeout(fsMessageTimer);
+  fsMessageTimer = setTimeout(() => {
+    if (!state.fsBusy) {
+      $("#fs-status").textContent = `${count} item${count === 1 ? "" : "s"}`;
+    }
+  }, 1800);
 }
 
 async function loadApps(force = false) {
@@ -863,6 +1788,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupNavigation();
   setupConnection();
   setupSearch();
+  setupShell();
+  setupFilesystem();
   setupCharts();
   renderSensors();
   renderSessions();

@@ -47,3 +47,34 @@ pub struct StatusInfo {
     pub serial: Option<String>,
     pub monitoring: bool,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ShellOutput {
+    pub stdout: String,
+    pub stderr: String,
+    pub exit_code: i32,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct FsEntry {
+    pub name: String,
+    pub path: String,
+    pub is_dir: bool,
+    pub is_link: bool,
+    pub size: u64,
+    pub modified: String,
+    pub permissions: String,
+    pub link_target: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DirectoryListing {
+    pub path: String,
+    pub entries: Vec<FsEntry>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ImagePreview {
+    pub mime: String,
+    pub data: String,
+}

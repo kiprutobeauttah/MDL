@@ -57,6 +57,11 @@
               <button class="nav-btn" data-view="settings" data-icon="settings">Settings</button>
 
               <div class="nav-sep"></div>
+              <div class="nav-section">TOOLS</div>
+              <button class="nav-btn" data-view="shell" data-icon="terminal">Shell</button>
+              <button class="nav-btn" data-view="filesystem" data-icon="folder">Filesystem</button>
+
+              <div class="nav-sep"></div>
               <div class="nav-section">ANALYSIS</div>
               <button class="nav-btn" data-view="sessions" data-icon="bar-chart-2">Sessions</button>
               <button class="nav-btn" data-view="events" data-icon="file-text">Events</button>
@@ -441,6 +446,108 @@
               </div>
             </section>
 
+            <section class="view" id="view-shell">
+              <div class="page-header shell-page-header">
+                <h1 class="page-title">SHELL</h1>
+                <div class="shell-header-actions">
+                  <div id="shell-mode-switch" class="segmented" role="group" aria-label="Shell mode">
+                    <button type="button" class="segment active" data-shell-mode="terminal">Terminal</button>
+                    <button type="button" class="segment" data-shell-mode="gui">GUI</button>
+                  </div>
+                  <button id="shell-help-btn" class="btn secondary" type="button">Help</button>
+                  <span id="shell-status" class="status-text success">● Ready</span>
+                </div>
+              </div>
+              <p class="muted">Run commands on the connected Android device over ADB.</p>
+
+              <div id="shell-terminal-panel" class="terminal">
+                <div id="shell-output" class="terminal-output" aria-live="polite">
+                  <div class="terminal-line terminal-muted">Type a command and press Enter.</div>
+                </div>
+                <form id="shell-form" class="terminal-input-row">
+                  <span class="terminal-prompt">$</span>
+                  <input id="shell-input" class="terminal-input" type="text" spellcheck="false" autocomplete="off" placeholder="getprop ro.product.model" />
+                  <button id="shell-run" class="btn terminal-btn" type="submit">Run</button>
+                  <button id="shell-clear" class="btn secondary terminal-btn" type="button">Clear</button>
+                </form>
+                <div class="terminal-hint">Press Enter to run · Use ↑ and ↓ to browse command history</div>
+              </div>
+
+              <div id="shell-gui-panel" class="shell-gui hidden">
+                <div class="card shell-command-card">
+                  <form id="shell-gui-form">
+                    <div class="shell-gui-head">
+                      <label class="section-label" for="shell-gui-input">COMMAND</label>
+                      <span id="shell-gui-target" class="muted small">Connected device</span>
+                    </div>
+                    <div class="shell-gui-row">
+                      <input id="shell-gui-input" class="input shell-gui-input" type="text" spellcheck="false" autocomplete="off" placeholder="dumpsys battery" />
+                      <button id="shell-gui-run" class="btn" type="submit">Run</button>
+                      <button id="shell-gui-clear" class="btn secondary" type="button">Clear</button>
+                    </div>
+                  </form>
+                </div>
+
+                <div class="card shell-output-card">
+                  <div class="shell-output-head">
+                    <span class="section-label">OUTPUT</span>
+                    <span id="shell-gui-state" class="muted small">No command run yet</span>
+                  </div>
+                  <code id="shell-gui-command" class="shell-gui-command"></code>
+                  <pre id="shell-gui-stdout" class="shell-result stdout"></pre>
+                  <pre id="shell-gui-stderr" class="shell-result stderr hidden"></pre>
+                  <div id="shell-gui-exit" class="shell-exit hidden"></div>
+                </div>
+
+                <div class="card shell-history-card">
+                  <div class="list-head">
+                    <span class="section-label">RECENT COMMANDS</span>
+                    <span id="shell-history-count" class="muted small">0 commands</span>
+                  </div>
+                  <div id="shell-history" class="shell-history"></div>
+                </div>
+              </div>
+            </section>
+
+            <section class="view" id="view-filesystem">
+              <div class="page-header">
+                <h1 class="page-title">FILESYSTEM</h1>
+                <span id="fs-status" class="status-text">--</span>
+              </div>
+              <p class="muted">Browse folders and files on the connected Android device. Double-click an image to preview it.</p>
+
+              <div class="fs-toolbar">
+                <button id="fs-up" class="btn secondary icon-btn" type="button" title="Parent folder">&#8593;</button>
+                <button id="fs-refresh" class="btn secondary icon-btn" type="button" title="Refresh">&#8635;</button>
+                <input id="fs-path" class="input fs-path-input" type="text" spellcheck="false" autocomplete="off" />
+                <button id="fs-go" class="btn" type="button">Go</button>
+              </div>
+
+              <div id="fs-breadcrumb" class="fs-breadcrumb"></div>
+
+              <div class="fs-shortcuts">
+                <button class="chip" type="button" data-fs-path="/">Root</button>
+                <button class="chip" type="button" data-fs-path="/sdcard">Internal storage</button>
+                <button class="chip" type="button" data-fs-path="/storage/emulated/0">Emulated storage</button>
+                <button class="chip" type="button" data-fs-path="/data/local/tmp">Temp</button>
+              </div>
+
+              <div class="fs-table">
+                <div class="fs-header">
+                  <span>Name</span>
+                  <span>Size</span>
+                  <span>Modified</span>
+                  <span>Permissions</span>
+                </div>
+                <div id="fs-list" class="fs-list" role="list"></div>
+              </div>
+
+              <div class="fs-footer">
+                <span id="fs-count">0 items</span>
+                <span id="fs-error" class="fs-error"></span>
+              </div>
+            </section>
+
             <section class="view" id="view-sessions">
               <div class="page-header">
                 <h1 class="page-title">SESSIONS</h1>
@@ -530,9 +637,42 @@
         <span id="status-dot" class="status-dot">●</span>
         <span id="status-text">No device</span>
         <span class="spacer"></span>
-        <span class="version">v0.1.0 by Beauttah K.</span>
+        <span class="version">v1.0.0 by Beauttah K.</span>
       </footer>
     </div>
+
+    <div id="shell-help" class="modal-overlay hidden" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="shell-help-title">
+        <div class="modal-head">
+          <div>
+            <h2 id="shell-help-title" class="modal-title">Shell Command Help</h2>
+            <p class="muted small">Common Android shell commands. Select one to insert it into the active shell.</p>
+          </div>
+          <button id="shell-help-close" class="modal-close" type="button" aria-label="Close help">&times;</button>
+        </div>
+        <input id="shell-help-search" class="input" type="text" placeholder="Search commands or descriptions..." />
+        <div id="shell-help-list" class="shell-help-list"></div>
+      </div>
+    </div>
+
+    <div id="image-preview" class="modal-overlay hidden" aria-hidden="true">
+      <div class="modal image-preview-modal" role="dialog" aria-modal="true" aria-labelledby="image-preview-title">
+        <div class="modal-head">
+          <div>
+            <h2 id="image-preview-title" class="modal-title">Image preview</h2>
+            <p id="image-preview-path" class="muted small image-preview-path"></p>
+          </div>
+          <button id="image-preview-close" class="modal-close" type="button" aria-label="Close image preview">&times;</button>
+        </div>
+        <div id="image-preview-body" class="image-preview-body">
+          <div id="image-preview-loading" class="empty-list">Loading image...</div>
+          <img id="image-preview-image" class="image-preview-image hidden" alt="" />
+          <div id="image-preview-error" class="empty-list hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="context-menu" class="context-menu hidden" role="menu" aria-hidden="true"></div>
 
     <script src="app.js"></script>
   </body>

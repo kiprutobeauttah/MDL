@@ -1,5 +1,6 @@
 mod adb;
 mod collectors;
+mod filesystem;
 mod models;
 mod monitor;
 
@@ -8,7 +9,9 @@ use std::sync::Arc;
 use tauri::{AppHandle, State};
 
 use adb::AdbClient;
-use models::{AppEntry, DeviceEntry, DeviceInfo, StatusInfo};
+use models::{
+    AppEntry, DeviceEntry, DeviceInfo, DirectoryListing, ImagePreview, ShellOutput, StatusInfo,
+};
 
 struct AppState {
     adb: Arc<AdbClient>,
@@ -57,6 +60,44 @@ fn get_status(state: State<'_, AppState>) -> StatusInfo {
     }
 }
 
+#[tauri::command]
+async fn run_shell_command(
+    command: String,
+    state: State<'_, AppState>,
+) -> Result<ShellOutput, String> {
+    let command = command.trim().to_string();
+    if command.is_empty() {
+        return Err("Enter a command".to_string());
+    }
+
+    let adb = Arc::clone(&state.adb);
+    tauri::async_runtime::spawn_blocking(move || adb.shell(&command))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn list_directory(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<DirectoryListing, String> {
+    let adb = Arc::clone(&state.adb);
+    tauri::async_runtime::spawn_blocking(move || filesystem::list(&adb, &path))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn read_image_preview(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<ImagePreview, String> {
+    let adb = Arc::clone(&state.adb);
+    tauri::async_runtime::spawn_blocking(move || filesystem::image_preview(&adb, &path))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let adb = Arc::new(AdbClient::new());
@@ -71,7 +112,10 @@ pub fn run() {
             stop_monitoring,
             get_device_info,
             get_apps,
-            get_status
+            get_status,
+            run_shell_command,
+            list_directory,
+            read_image_preview
         ])
         .run(tauri::generate_context!())
         .expect("error while running MDL");

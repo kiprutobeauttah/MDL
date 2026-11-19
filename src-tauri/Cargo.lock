@@ -1828,8 +1828,9 @@ dependencies = [
 
 [[package]]
 name = "mdl"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
+ "base64 0.21.7",
  "chrono",
  "serde",
  "serde_json",

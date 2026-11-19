@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::RwLock;
 
 use crate::collectors;
-use crate::models::{DeviceEntry, DeviceInfo};
+use crate::models::{DeviceEntry, DeviceInfo, ShellOutput};
 
 #[derive(Default)]
 pub struct AdbClient {
@@ -107,6 +107,59 @@ impl AdbClient {
     pub fn execute_on(&self, serial: &str, command: &str) -> Result<String, String> {
         run_adb(&["-s", serial, "shell", command])
     }
+
+    pub fn shell(&self, command: &str) -> Result<ShellOutput, String> {
+        let serial = self
+            .serial()
+            .ok_or_else(|| "No device connected".to_string())?;
+        let output = Command::new("adb")
+            .arg("-s")
+            .arg(&serial)
+            .arg("shell")
+            .arg(command)
+            .output()
+            .map_err(|error| format!("Failed to run adb: {error}"))?;
+
+        Ok(ShellOutput {
+            stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+            stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+            exit_code: output.status.code().unwrap_or(-1),
+        })
+    }
+
+    pub fn read_file_bytes(&self, path: &str) -> Result<Vec<u8>, String> {
+        let serial = self
+            .serial()
+            .ok_or_else(|| "No device connected".to_string())?;
+        let output = Command::new("adb")
+            .arg("-s")
+            .arg(&serial)
+            .arg("exec-out")
+            .arg(format!("cat {}", shell_quote(path)))
+            .output()
+            .map_err(|error| format!("Failed to run adb: {error}"))?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let message = if stderr.trim().is_empty() {
+                stdout.trim()
+            } else {
+                stderr.trim()
+            };
+            return Err(if message.is_empty() {
+                format!("Unable to read {path}")
+            } else {
+                message.to_string()
+            });
+        }
+
+        Ok(output.stdout)
+    }
+}
+
+pub(crate) fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 fn run_adb(args: &[&str]) -> Result<String, String> {
