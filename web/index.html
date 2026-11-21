@@ -672,6 +672,85 @@
       </div>
     </div>
 
+    <div id="app-detail" class="modal-overlay hidden" aria-hidden="true">
+      <div class="modal app-detail-modal" role="dialog" aria-modal="true" aria-labelledby="app-detail-title">
+        <div class="modal-head">
+          <div>
+            <h2 id="app-detail-title" class="modal-title">Application</h2>
+            <p id="app-detail-package" class="muted small"></p>
+          </div>
+          <button id="app-detail-close" class="modal-close" type="button" aria-label="Close application details">&times;</button>
+        </div>
+
+        <div class="app-actions">
+          <button id="app-launch" class="btn" type="button">Launch</button>
+          <button id="app-stop" class="btn secondary" type="button">Force stop</button>
+          <button id="app-logs-toggle" class="btn secondary" type="button">Start logs</button>
+          <button id="app-refresh" class="btn secondary" type="button">Refresh</button>
+          <span id="app-action-status" class="status-text">--</span>
+        </div>
+
+        <div class="app-detail-grid">
+          <div class="card">
+            <div class="section-label">STATUS &amp; SIZE</div>
+            <div class="details-grid compact">
+              <div class="detail-label">Running</div>
+              <div class="detail-value" id="app-running">--</div>
+              <div class="detail-label">PIDs</div>
+              <div class="detail-value" id="app-pids">--</div>
+              <div class="detail-label">APK size</div>
+              <div class="detail-value" id="app-apk-size">--</div>
+              <div class="detail-label">Data size</div>
+              <div class="detail-value" id="app-data-size">--</div>
+              <div class="detail-label">Cache size</div>
+              <div class="detail-value" id="app-cache-size">--</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-label">BACKGROUND TASKS</div>
+            <div class="details-grid compact">
+              <div class="detail-label">Services</div>
+              <div class="detail-value app-detail-list" id="app-services">--</div>
+              <div class="detail-label">Jobs</div>
+              <div class="detail-value app-detail-list" id="app-jobs">--</div>
+              <div class="detail-label">Alarms</div>
+              <div class="detail-value app-detail-list" id="app-alarms">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="list-head">
+            <span class="section-label">PERMISSIONS</span>
+            <span id="app-permissions-count" class="muted small"></span>
+          </div>
+          <div id="app-permissions" class="permission-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="list-head">
+            <span class="section-label">LOGS</span>
+            <span id="app-log-status" class="muted small">Not streaming</span>
+          </div>
+          <pre id="app-log-output" class="app-log-output"></pre>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirm-dialog" class="modal-overlay hidden" aria-hidden="true">
+      <div class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+        <div class="modal-head">
+          <h2 id="confirm-title" class="modal-title">Confirm</h2>
+        </div>
+        <p id="confirm-message" class="confirm-message"></p>
+        <div class="confirm-actions">
+          <button id="confirm-cancel" class="btn secondary" type="button">Cancel</button>
+          <button id="confirm-ok" class="btn" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
+
     <div id="context-menu" class="context-menu hidden" role="menu" aria-hidden="true"></div>
 
     <script src="app.js"></script>

@@ -1,4 +1,5 @@
 mod adb;
+mod app_control;
 mod collectors;
 mod filesystem;
 mod models;
@@ -9,8 +10,10 @@ use std::sync::Arc;
 use tauri::{AppHandle, State};
 
 use adb::AdbClient;
+use app_control::LogcatState;
 use models::{
-    AppEntry, DeviceEntry, DeviceInfo, DirectoryListing, ImagePreview, ShellOutput, StatusInfo,
+    AppDetails, AppEntry, DeviceEntry, DeviceInfo, DirectoryListing, ImagePreview, ShellOutput,
+    StatusInfo,
 };
 
 struct AppState {
@@ -28,7 +31,8 @@ fn connect_device(serial: String, state: State<'_, AppState>) -> Result<DeviceIn
 }
 
 #[tauri::command]
-fn disconnect_device(state: State<'_, AppState>) {
+fn disconnect_device(state: State<'_, AppState>, logs: State<'_, LogcatState>) {
+    app_control::stop_logs(&logs);
     state.adb.disconnect();
 }
 
@@ -50,6 +54,49 @@ fn get_device_info(state: State<'_, AppState>) -> Result<DeviceInfo, String> {
 #[tauri::command]
 fn get_apps(state: State<'_, AppState>) -> Result<Vec<AppEntry>, String> {
     collectors::apps::collect(&state.adb)
+}
+
+#[tauri::command]
+async fn launch_app(package: String, state: State<'_, AppState>) -> Result<String, String> {
+    let adb = Arc::clone(&state.adb);
+    tauri::async_runtime::spawn_blocking(move || app_control::launch(&adb, &package))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn stop_app(package: String, state: State<'_, AppState>) -> Result<String, String> {
+    let adb = Arc::clone(&state.adb);
+    tauri::async_runtime::spawn_blocking(move || app_control::stop(&adb, &package))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn get_app_details(
+    package: String,
+    state: State<'_, AppState>,
+) -> Result<AppDetails, String> {
+    let adb = Arc::clone(&state.adb);
+    tauri::async_runtime::spawn_blocking(move || app_control::details(&adb, &package))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+fn start_app_logs(
+    app: AppHandle,
+    package: String,
+    session: u64,
+    state: State<'_, AppState>,
+    logs: State<'_, LogcatState>,
+) -> Result<(), String> {
+    app_control::start_logs(app, &state.adb, &logs, &package, session)
+}
+
+#[tauri::command]
+fn stop_app_logs(logs: State<'_, LogcatState>) {
+    app_control::stop_logs(&logs);
 }
 
 #[tauri::command]
@@ -104,6 +151,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .manage(AppState { adb })
+        .manage(LogcatState::default())
         .invoke_handler(tauri::generate_handler![
             list_devices,
             connect_device,
@@ -112,6 +160,11 @@ pub fn run() {
             stop_monitoring,
             get_device_info,
             get_apps,
+            launch_app,
+            stop_app,
+            get_app_details,
+            start_app_logs,
+            stop_app_logs,
             get_status,
             run_shell_command,
             list_directory,

@@ -174,6 +174,15 @@ const state = {
   fsLoaded: false,
   fsBusy: false,
   charts: {},
+  appDetail: {
+    package: null,
+    label: null,
+    details: null,
+    loading: false,
+    loadToken: 0,
+    logSession: null,
+    logActive: false,
+  },
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -1407,15 +1416,354 @@ function renderApps() {
   list.innerHTML = filtered
     .map(
       (app) => `
-        <div class="list-item">
+        <div class="list-item app-item">
           <div>
             <div class="title">${escapeHtml(app.label)}</div>
             <div class="sub">${escapeHtml(app.package)}</div>
           </div>
+          <button class="btn secondary app-inspect" type="button" data-package="${escapeHtml(
+            app.package
+          )}" data-label="${escapeHtml(app.label)}">Inspect</button>
         </div>
       `
     )
     .join("");
+}
+
+function setupApps() {
+  $("#apps-list").addEventListener("click", (event) => {
+    const button = event.target.closest(".app-inspect");
+    if (!button) {
+      return;
+    }
+    openAppDetail(button.dataset.package, button.dataset.label);
+  });
+
+  $("#app-detail-close").addEventListener("click", closeAppDetail);
+  $("#app-detail").addEventListener("click", (event) => {
+    if (event.target === $("#app-detail")) {
+      closeAppDetail();
+    }
+  });
+  $("#app-launch").addEventListener("click", launchSelectedApp);
+  $("#app-stop").addEventListener("click", stopSelectedApp);
+  $("#app-logs-toggle").addEventListener("click", toggleAppLogs);
+  $("#app-refresh").addEventListener("click", loadAppDetails);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || $("#app-detail").classList.contains("hidden")) {
+      return;
+    }
+    if (!$("#confirm-dialog").classList.contains("hidden")) {
+      return;
+    }
+    closeAppDetail();
+  });
+}
+
+let confirmResolve = null;
+
+function setupConfirmDialog() {
+  $("#confirm-cancel").addEventListener("click", () => closeConfirmDialog(false));
+  $("#confirm-ok").addEventListener("click", () => closeConfirmDialog(true));
+  $("#confirm-dialog").addEventListener("click", (event) => {
+    if (event.target === $("#confirm-dialog")) {
+      closeConfirmDialog(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !$("#confirm-dialog").classList.contains("hidden")) {
+      closeConfirmDialog(false);
+    }
+  });
+}
+
+function confirmAction(title, message, confirmLabel) {
+  return new Promise((resolve) => {
+    if (confirmResolve) {
+      confirmResolve(false);
+    }
+
+    confirmResolve = resolve;
+    $("#confirm-title").textContent = title;
+    $("#confirm-message").textContent = message;
+    $("#confirm-ok").textContent = confirmLabel || "Confirm";
+    $("#confirm-dialog").classList.remove("hidden");
+    $("#confirm-dialog").setAttribute("aria-hidden", "false");
+    $("#confirm-ok").focus();
+  });
+}
+
+function closeConfirmDialog(result) {
+  const overlay = $("#confirm-dialog");
+  if (overlay.classList.contains("hidden")) {
+    return;
+  }
+
+  overlay.classList.add("hidden");
+  overlay.setAttribute("aria-hidden", "true");
+  const resolve = confirmResolve;
+  confirmResolve = null;
+  if (resolve) {
+    resolve(result);
+  }
+}
+
+function openAppDetail(packageName, label) {
+  const detail = state.appDetail;
+  if (detail.logActive) {
+    stopAppLogs();
+  }
+
+  detail.package = packageName;
+  detail.label = label || packageName;
+  detail.details = null;
+  detail.logSession = null;
+  detail.logActive = false;
+
+  $("#app-detail-title").textContent = detail.label;
+  $("#app-detail-package").textContent = packageName;
+  $("#app-log-output").textContent = "";
+  $("#app-log-status").textContent = "Not streaming";
+  $("#app-log-status").className = "muted small";
+  $("#app-logs-toggle").textContent = "Start logs";
+  $("#app-running").textContent = "--";
+  $("#app-pids").textContent = "--";
+  $("#app-apk-size").textContent = "--";
+  $("#app-data-size").textContent = "--";
+  $("#app-cache-size").textContent = "--";
+  $("#app-services").textContent = "--";
+  $("#app-jobs").textContent = "--";
+  $("#app-alarms").textContent = "--";
+  $("#app-permissions").innerHTML = "";
+  $("#app-permissions-count").textContent = "";
+  setAppActionStatus("Loading...", "");
+
+  $("#app-detail").classList.remove("hidden");
+  $("#app-detail").setAttribute("aria-hidden", "false");
+  loadAppDetails();
+}
+
+function closeAppDetail() {
+  if (state.appDetail.logActive) {
+    stopAppLogs();
+  }
+
+  state.appDetail.package = null;
+  state.appDetail.details = null;
+  const overlay = $("#app-detail");
+  overlay.classList.add("hidden");
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function setAppActionStatus(text, kind) {
+  const status = $("#app-action-status");
+  status.textContent = text;
+  status.className = `status-text ${kind || ""}`.trim();
+}
+
+async function loadAppDetails() {
+  const detail = state.appDetail;
+  if (!detail.package) {
+    return;
+  }
+
+  const token = ++detail.loadToken;
+  detail.loading = true;
+  setAppActionStatus("Refreshing...", "");
+
+  try {
+    const data = await invoke("get_app_details", { package: detail.package });
+    if (token !== detail.loadToken || detail.package !== data.package) {
+      return;
+    }
+    detail.details = data;
+    renderAppDetails(data);
+    setAppActionStatus(data.running ? "● Running" : "● Stopped", data.running ? "success" : "");
+  } catch (error) {
+    if (token === detail.loadToken) {
+      setAppActionStatus(String(error), "error");
+    }
+  } finally {
+    if (token === detail.loadToken) {
+      detail.loading = false;
+    }
+  }
+}
+
+function renderAppDetails(details) {
+  $("#app-running").textContent = details.running ? "Yes" : "No";
+  $("#app-pids").textContent =
+    details.pids && details.pids.length > 0 ? details.pids.join(", ") : "--";
+  $("#app-apk-size").textContent = formatFileSize(details.apk_size);
+  $("#app-data-size").textContent = formatFileSize(details.data_size);
+  $("#app-cache-size").textContent = formatFileSize(details.cache_size);
+  $("#app-services").textContent = formatAppList(details.services, "No active services");
+  $("#app-jobs").textContent = formatAppList(details.jobs, "No scheduled jobs");
+  $("#app-alarms").textContent = formatAppList(details.alarms, "No pending alarms");
+  renderAppPermissions(details.permissions || []);
+}
+
+function formatAppList(items, emptyText) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return emptyText;
+  }
+  return items.join("\n");
+}
+
+function renderAppPermissions(permissions) {
+  const list = $("#app-permissions");
+  const count = permissions.length;
+  $("#app-permissions-count").textContent = `${count} permission${count === 1 ? "" : "s"}`;
+
+  if (count === 0) {
+    list.innerHTML = `<div class="empty-list">No permissions reported</div>`;
+    return;
+  }
+
+  list.innerHTML = permissions
+    .map((permission) => {
+      const granted = permission.granted;
+      const badge = granted === true ? "Granted" : granted === false ? "Denied" : "Declared";
+      const kind = granted === true ? "success" : granted === false ? "error" : "";
+      const suffix = permission.runtime ? " · runtime" : "";
+      return `
+        <div class="permission-row">
+          <code class="permission-name">${escapeHtml(permission.name)}</code>
+          <span class="permission-badge ${kind}">${badge}${suffix}</span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+async function launchSelectedApp() {
+  const detail = state.appDetail;
+  if (!detail.package) {
+    return;
+  }
+
+  setAppActionStatus("Launching...", "");
+  try {
+    const message = await invoke("launch_app", { package: detail.package });
+    setAppActionStatus(message, "success");
+    await loadAppDetails();
+  } catch (error) {
+    setAppActionStatus(String(error), "error");
+  }
+}
+
+async function stopSelectedApp() {
+  const detail = state.appDetail;
+  if (!detail.package) {
+    return;
+  }
+
+  const confirmed = await confirmAction(
+    "Force stop application",
+    `Force stop ${detail.label}? Any unsaved state in the app will be lost.`,
+    "Force stop"
+  );
+  if (!confirmed || !detail.package) {
+    return;
+  }
+
+  setAppActionStatus("Stopping...", "");
+  try {
+    const message = await invoke("stop_app", { package: detail.package });
+    setAppActionStatus(message, "success");
+    await loadAppDetails();
+  } catch (error) {
+    setAppActionStatus(String(error), "error");
+  }
+}
+
+async function toggleAppLogs() {
+  if (state.appDetail.logActive) {
+    await stopAppLogs();
+  } else {
+    await startAppLogs();
+  }
+}
+
+async function startAppLogs() {
+  const detail = state.appDetail;
+  if (!detail.package) {
+    return;
+  }
+
+  const session = Date.now();
+  detail.logSession = session;
+  detail.logActive = true;
+  $("#app-log-output").textContent = "";
+  $("#app-logs-toggle").textContent = "Stop logs";
+  $("#app-log-status").textContent = "● Streaming";
+  $("#app-log-status").className = "status-text success";
+
+  try {
+    await invoke("start_app_logs", { package: detail.package, session });
+  } catch (error) {
+    detail.logActive = false;
+    detail.logSession = null;
+    $("#app-logs-toggle").textContent = "Start logs";
+    $("#app-log-status").textContent = String(error);
+    $("#app-log-status").className = "status-text error";
+  }
+}
+
+async function stopAppLogs() {
+  const detail = state.appDetail;
+  const wasActive = detail.logActive;
+  detail.logActive = false;
+  detail.logSession = null;
+  $("#app-logs-toggle").textContent = "Start logs";
+  $("#app-log-status").textContent = "Not streaming";
+  $("#app-log-status").className = "muted small";
+
+  if (wasActive) {
+    try {
+      await invoke("stop_app_logs");
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+function appendAppLog(line) {
+  const output = $("#app-log-output");
+  output.append(document.createTextNode(`${line}\n`));
+  while (output.childNodes.length > 3000) {
+    output.removeChild(output.firstChild);
+  }
+  output.scrollTop = output.scrollHeight;
+}
+
+async function listenAppLogs() {
+  if (!window.__TAURI__ || !window.__TAURI__.event) {
+    return;
+  }
+
+  await window.__TAURI__.event.listen("app-log", (event) => {
+    const payload = event.payload;
+    const detail = state.appDetail;
+    if (!payload || !detail.logActive || payload.session !== detail.logSession) {
+      return;
+    }
+    appendAppLog(payload.line);
+  });
+
+  await window.__TAURI__.event.listen("app-log-end", (event) => {
+    const payload = event.payload;
+    const detail = state.appDetail;
+    if (!payload || payload.session !== detail.logSession) {
+      return;
+    }
+    detail.logActive = false;
+    $("#app-logs-toggle").textContent = "Start logs";
+    $("#app-log-status").textContent = "Stream ended";
+    $("#app-log-status").className = "muted small";
+  });
 }
 
 function renderSensors() {
@@ -1790,11 +2138,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupSearch();
   setupShell();
   setupFilesystem();
+  setupApps();
+  setupConfirmDialog();
   setupCharts();
   renderSensors();
   renderSessions();
   renderEvents();
   listenMetrics().catch((error) => console.error(error));
+  listenAppLogs().catch((error) => console.error(error));
   refreshDevices();
 });
 

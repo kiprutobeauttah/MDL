@@ -1527,3 +1527,146 @@ select {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
+
+.app-item {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-item > div {
+  min-width: 0;
+}
+
+.app-inspect {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  font-size: 12px;
+}
+
+.app-detail-modal {
+  width: min(880px, 100%);
+  overflow-y: auto;
+}
+
+.app-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.app-actions .status-text {
+  margin-left: auto;
+}
+
+.app-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+
+.app-detail-grid .card {
+  padding: 16px 18px;
+}
+
+.details-grid.compact {
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 8px 12px;
+  padding-top: 0;
+}
+
+.app-detail-list {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.permission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 190px;
+  overflow-y: auto;
+}
+
+.permission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 8px;
+  border-radius: 5px;
+}
+
+.permission-row:hover {
+  background: var(--bg-secondary);
+}
+
+.permission-name {
+  min-width: 0;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.permission-badge {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.permission-badge.success {
+  color: var(--green);
+}
+
+.permission-badge.error {
+  color: var(--red);
+}
+
+.app-log-output {
+  max-height: 220px;
+  min-height: 90px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #1c1f26;
+  color: #d6dae2;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .app-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.confirm-modal {
+  width: min(420px, 100%);
+}
+
+.confirm-modal .modal-head {
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  margin: 0 0 22px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

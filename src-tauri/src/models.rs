@@ -32,6 +32,40 @@ pub struct AppEntry {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct AppPermission {
+    pub name: String,
+    pub granted: Option<bool>,
+    pub runtime: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AppDetails {
+    pub package: String,
+    pub running: bool,
+    pub pids: Vec<u32>,
+    pub apk_size: Option<u64>,
+    pub data_size: Option<u64>,
+    pub cache_size: Option<u64>,
+    pub permissions: Vec<AppPermission>,
+    pub services: Vec<String>,
+    pub jobs: Vec<String>,
+    pub alarms: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AppLogEvent {
+    pub session: u64,
+    pub package: String,
+    pub line: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AppLogEnd {
+    pub session: u64,
+    pub package: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct MetricEvent {
     pub timestamp: String,
     pub category: String,
