@@ -1670,3 +1670,126 @@ select {
   justify-content: flex-end;
   gap: 10px;
 }
+
+.mono {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+.empty-state {
+  padding: 32px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.notification-item {
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.notification-main {
+  min-width: 0;
+}
+
+.notification-meta {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.notification-meta .sub {
+  margin-top: 2px;
+}
+
+.badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.small-value {
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.sensor-vendor {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.session-status {
+  margin: -6px 0 16px;
+}
+
+.session-status.recording {
+  color: var(--green);
+}
+
+.session-status.error {
+  color: var(--red);
+}
+
+.session-item {
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.session-actions {
+  flex-wrap: wrap;
+  margin-top: 0;
+}
+
+.logs-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.logs-toolbar #logs-tag {
+  flex: 1;
+  min-width: 160px;
+}
+
+.logs-output {
+  height: calc(100vh - 300px);
+  min-height: 320px;
+  max-height: none;
+}
+
+.usage-header,
+.usage-row {
+  grid-template-columns: minmax(0, 1fr) 90px 110px;
+}
+
+.usage-list {
+  height: min(520px, calc(100vh - 330px));
+  min-height: 240px;
+}
+
+.usage-row {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.usage-row:last-child {
+  border-bottom: none;
+}
+
+.usage-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

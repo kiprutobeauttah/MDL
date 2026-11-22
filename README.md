@@ -84,12 +84,12 @@ ADB → Collectors → Metric events → Web UI
 
 Rust sources live in `src-tauri/src/`, and the frontend lives in `web/`.
 
-Collectors currently cover device information, battery, performance, network diagnostics, Wi-Fi, cellular, Bluetooth, and installed applications.
+Collectors currently cover device information, battery, performance, network diagnostics, Wi-Fi, cellular, Bluetooth, and installed applications. Inspection tools add live logcat, notifications, foreground activity and task stack, power/doze and wake locks, per-app CPU and memory, thermal zones and sensor snapshots, plus recordable sessions that can be exported to CSV or JSON.
 
 ## Contributing
 
 Contributions are welcome! MDL v0.1 is the foundation with an extensible collector architecture. Feel free to:
-- Add new collectors (Wi-Fi signal analysis, cellular metrics, sensors, etc.)
+- Add new collectors (Wi-Fi signal analysis, cellular metrics, etc.)
 - Improve visualizations
 - Enhance the UI
 - Fix bugs

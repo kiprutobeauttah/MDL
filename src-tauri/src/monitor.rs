@@ -8,8 +8,9 @@ use crate::adb::AdbClient;
 use crate::collectors;
 use crate::collectors::network::NetworkState;
 use crate::models::MetricEvent;
+use crate::sessions::SessionRecorder;
 
-pub fn start(app: AppHandle, adb: Arc<AdbClient>) {
+pub fn start(app: AppHandle, adb: Arc<AdbClient>, recorder: Arc<SessionRecorder>) {
     if adb.monitoring() {
         return;
     }
@@ -33,42 +34,43 @@ pub fn start(app: AppHandle, adb: Arc<AdbClient>) {
 
             if !device_collected && due(last_device, now, Duration::from_secs(0)) {
                 if let Ok(info) = collectors::device::collect(&adb) {
-                    emit(&app, &collectors::device::events(&info));
+                    emit(&app, &recorder, &collectors::device::events(&info));
                     device_collected = true;
                 }
                 last_device = Some(now);
             }
 
             if due(last_performance, now, Duration::from_secs(1)) {
-                emit(&app, &collectors::performance::collect(&adb));
+                emit(&app, &recorder, &collectors::performance::collect(&adb));
                 last_performance = Some(now);
             }
 
             if due(last_network, now, Duration::from_secs(1)) {
                 emit(
                     &app,
+                    &recorder,
                     &collectors::network::collect(&adb, &mut network_state),
                 );
                 last_network = Some(now);
             }
 
             if due(last_wifi, now, Duration::from_secs(1)) {
-                emit(&app, &collectors::wifi::collect(&adb));
+                emit(&app, &recorder, &collectors::wifi::collect(&adb));
                 last_wifi = Some(now);
             }
 
             if due(last_cellular, now, Duration::from_secs(1)) {
-                emit(&app, &collectors::cellular::collect(&adb));
+                emit(&app, &recorder, &collectors::cellular::collect(&adb));
                 last_cellular = Some(now);
             }
 
             if due(last_battery, now, Duration::from_secs(5)) {
-                emit(&app, &collectors::battery::collect(&adb));
+                emit(&app, &recorder, &collectors::battery::collect(&adb));
                 last_battery = Some(now);
             }
 
             if due(last_bluetooth, now, Duration::from_secs(5)) {
-                emit(&app, &collectors::bluetooth::collect(&adb));
+                emit(&app, &recorder, &collectors::bluetooth::collect(&adb));
                 last_bluetooth = Some(now);
             }
 
@@ -86,8 +88,9 @@ fn due(last: Option<Instant>, now: Instant, interval: Duration) -> bool {
     }
 }
 
-fn emit(app: &AppHandle, events: &[MetricEvent]) {
+fn emit(app: &AppHandle, recorder: &SessionRecorder, events: &[MetricEvent]) {
     for event in events {
+        recorder.record(event);
         let _ = app.emit("metric", event);
     }
 }

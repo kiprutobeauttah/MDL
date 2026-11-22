@@ -13,6 +13,9 @@ const ICONS = {
   "bar-chart-2": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
   "file-text": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
   "alert-triangle": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`,
+  bell: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
+  layers: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>`,
+  zap: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`,
   terminal: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>`,
   folder: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
   file: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`,
@@ -183,6 +186,24 @@ const state = {
     logSession: null,
     logActive: false,
   },
+  notifications: [],
+  notificationsLoading: false,
+  activity: null,
+  activityLoading: false,
+  usage: [],
+  usageLoading: false,
+  power: null,
+  powerLoading: false,
+  sensorSnapshot: null,
+  sensorsLoading: false,
+  deviceLogs: {
+    session: null,
+    active: false,
+  },
+  sessions: [],
+  sessionsLoading: false,
+  sessionStatus: null,
+  viewTimers: {},
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -443,6 +464,11 @@ function setupNavigation() {
   });
 }
 
+function clearViewTimers() {
+  Object.values(state.viewTimers).forEach((timer) => clearInterval(timer));
+  state.viewTimers = {};
+}
+
 function setView(view) {
   $$(".nav-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === view);
@@ -451,8 +477,28 @@ function setView(view) {
     section.classList.toggle("active", section.id === `view-${view}`);
   });
   $("#content").scrollTop = 0;
+  clearViewTimers();
+
   if (view === "apps") {
     loadApps();
+  } else if (view === "notifications") {
+    loadNotifications();
+    state.viewTimers.notifications = setInterval(loadNotifications, 5000);
+  } else if (view === "activity") {
+    loadActivity();
+    state.viewTimers.activity = setInterval(loadActivity, 3000);
+  } else if (view === "usage") {
+    loadUsage();
+    state.viewTimers.usage = setInterval(loadUsage, 3000);
+  } else if (view === "power") {
+    loadPower();
+    state.viewTimers.power = setInterval(loadPower, 5000);
+  } else if (view === "sensors") {
+    loadSensors();
+    state.viewTimers.sensors = setInterval(loadSensors, 3000);
+  } else if (view === "sessions") {
+    refreshSessionStatus();
+    loadSessions();
   } else if (view === "shell") {
     focusShellInput();
   } else if (view === "filesystem" && !state.fsLoaded) {
@@ -543,6 +589,7 @@ async function connectDevice() {
     state.device = { ...info };
     renderDeviceInfo();
     await invoke("start_monitoring");
+    refreshSessionStatus();
     $("#connection-screen").classList.add("hidden");
     $("#app-screen").classList.remove("hidden");
     setView("overview");
@@ -1766,52 +1813,508 @@ async function listenAppLogs() {
   });
 }
 
-function renderSensors() {
-  const sensors = [
-    ["Accelerometer", "TYPE_ACCELEROMETER"],
-    ["Gyroscope", "TYPE_GYROSCOPE"],
-    ["Magnetometer", "TYPE_MAGNETIC_FIELD"],
-    ["Light", "TYPE_LIGHT"],
-    ["Proximity", "TYPE_PROXIMITY"],
-    ["Pressure", "TYPE_PRESSURE"],
-    ["Temperature", "TYPE_AMBIENT_TEMPERATURE"],
-    ["Humidity", "TYPE_RELATIVE_HUMIDITY"],
-  ];
+function setViewStatus(selector, text, isError = false) {
+  const element = $(selector);
+  if (!element) {
+    return;
+  }
+  element.textContent = text;
+  element.className = `status-text${isError ? " error" : ""}`;
+}
 
-  $("#sensors-grid").innerHTML = sensors
+async function loadNotifications() {
+  if (state.notificationsLoading) {
+    return;
+  }
+  state.notificationsLoading = true;
+  setViewStatus("#notifications-status", "Loading...");
+  try {
+    state.notifications = await invoke("get_notifications");
+    renderNotifications();
+  } catch (error) {
+    setViewStatus("#notifications-status", String(error), true);
+  } finally {
+    state.notificationsLoading = false;
+  }
+}
+
+function renderNotifications() {
+  const list = $("#notifications-list");
+  const entries = state.notifications;
+  setViewStatus("#notifications-status", `${entries.length} active`);
+
+  if (!entries.length) {
+    list.innerHTML = `<div class="empty-state">No active notifications</div>`;
+    return;
+  }
+
+  list.innerHTML = entries
+    .map((entry) => {
+      const meta = [
+        entry.channel,
+        entry.importance !== null && entry.importance !== undefined ? `importance ${entry.importance}` : "",
+        entry.tag,
+      ]
+        .filter(Boolean)
+        .join(" · ");
+      const created = entry.created_at_ms ? new Date(entry.created_at_ms).toLocaleString() : "";
+      return `
+        <div class="list-item notification-item">
+          <div class="notification-main">
+            <div class="title">${escapeHtml(entry.title || "(untitled)")}</div>
+            <div class="sub">${escapeHtml(entry.text || "No text")}</div>
+            <div class="sub mono">${escapeHtml(entry.package)}${entry.id ? ` #${escapeHtml(entry.id)}` : ""}</div>
+          </div>
+          <div class="notification-meta">
+            <div class="sub">${escapeHtml(meta)}</div>
+            <div class="sub">${escapeHtml(created)}</div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+async function loadActivity() {
+  if (state.activityLoading) {
+    return;
+  }
+  state.activityLoading = true;
+  setViewStatus("#activity-status", "Loading...");
+  try {
+    state.activity = await invoke("get_activity_state");
+    renderActivity();
+  } catch (error) {
+    setViewStatus("#activity-status", String(error), true);
+  } finally {
+    state.activityLoading = false;
+  }
+}
+
+function renderActivity() {
+  const activity = state.activity;
+  if (!activity) {
+    return;
+  }
+
+  $("#activity-foreground").textContent = activity.foreground_package || "--";
+  $("#activity-component").textContent = activity.foreground_component || "--";
+  $("#activity-task-count").textContent = `${activity.tasks.length} tasks`;
+  setViewStatus("#activity-status", activity.foreground_package ? "Foreground detected" : "No foreground activity");
+
+  const list = $("#activity-tasks");
+  if (!activity.tasks.length) {
+    list.innerHTML = `<div class="empty-state">No recent tasks reported</div>`;
+    return;
+  }
+
+  list.innerHTML = activity.tasks
     .map(
-      ([name, type]) => `
-        <div class="sensor-card">
-          <div class="sensor-name">${escapeHtml(name)}</div>
-          <div class="sensor-type">${escapeHtml(type)}</div>
-          <div class="sensor-values">--</div>
+      (task) => `
+        <div class="list-item task-item">
+          <div>
+            <div class="title">Task #${escapeHtml(task.id)} · ${escapeHtml(task.package)}</div>
+            <div class="sub mono">${escapeHtml(task.activity || "No top activity")}</div>
+          </div>
+          <span class="badge ${task.visible ? "badge-success" : ""}">${task.visible ? "visible" : "hidden"}</span>
         </div>
       `
     )
     .join("");
 }
 
-function renderSessions() {
-  const sessions = [
-    { id: 1, start: "2026-08-10 14:30", duration: "1h 23m" },
-    { id: 2, start: "2026-08-09 10:15", duration: "45m" },
-    { id: 3, start: "2026-08-08 16:00", duration: "2h 10m" },
-  ];
+async function loadUsage() {
+  if (state.usageLoading) {
+    return;
+  }
+  state.usageLoading = true;
+  setViewStatus("#usage-status", "Loading...");
+  try {
+    state.usage = await invoke("get_app_usage");
+    renderUsage();
+  } catch (error) {
+    setViewStatus("#usage-status", String(error), true);
+  } finally {
+    state.usageLoading = false;
+  }
+}
 
-  $("#sessions-count").textContent = `${sessions.length} sessions`;
-  $("#sessions-list").innerHTML = sessions
+function renderUsage() {
+  const entries = state.usage;
+  setViewStatus("#usage-status", `${entries.length} processes`);
+
+  if (!entries.length) {
+    $("#usage-list").innerHTML = `<div class="empty-state">No process usage reported</div>`;
+    return;
+  }
+
+  $("#usage-list").innerHTML = entries
     .map(
-      (session) => `
+      (entry) => `
+        <div class="fs-row usage-row" role="listitem">
+          <span class="usage-name mono">${escapeHtml(entry.package)}</span>
+          <span>${formatNumber(entry.cpu_percent, 1)}%</span>
+          <span>${formatFileSize(entry.pss_kb * 1024)}</span>
+        </div>
+      `
+    )
+    .join("");
+}
+
+async function loadPower() {
+  if (state.powerLoading) {
+    return;
+  }
+  state.powerLoading = true;
+  setViewStatus("#power-status", "Loading...");
+  try {
+    state.power = await invoke("get_power_report");
+    renderPower();
+  } catch (error) {
+    setViewStatus("#power-status", String(error), true);
+  } finally {
+    state.powerLoading = false;
+  }
+}
+
+function renderPower() {
+  const report = state.power;
+  if (!report) {
+    return;
+  }
+
+  $("#power-wakefulness").textContent = report.wakefulness;
+  $("#power-doze").textContent = `${report.doze_state} / ${report.light_doze_state}`;
+  $("#power-saver").textContent = report.battery_saver ? "On" : "Off";
+  $("#power-charging").textContent = report.powered ? "Yes" : "No";
+  $("#power-wakelock-count").textContent = `${report.wakelocks.length} locks`;
+  setViewStatus("#power-status", report.battery_saver ? "Battery saver active" : "Normal power mode");
+
+  const list = $("#power-wakelocks");
+  if (!report.wakelocks.length) {
+    list.innerHTML = `<div class="empty-state">No wake locks held</div>`;
+    return;
+  }
+
+  list.innerHTML = report.wakelocks
+    .map(
+      (lock) => `
         <div class="list-item">
           <div>
-            <div class="title">Session #${session.id}</div>
-            <div class="sub">Started: ${escapeHtml(session.start)}</div>
-            <div class="sub">Duration: ${escapeHtml(session.duration)}</div>
+            <div class="title mono">${escapeHtml(lock.kind)}</div>
+            <div class="sub">${escapeHtml(lock.tag || "unknown tag")}</div>
+          </div>
+          <div class="notification-meta">
+            <div class="sub">${escapeHtml(lock.held || "--")}</div>
+            <div class="sub">${lock.uid ? `uid ${escapeHtml(lock.uid)}` : ""}${lock.pid ? ` · pid ${escapeHtml(lock.pid)}` : ""}</div>
           </div>
         </div>
       `
     )
     .join("");
+}
+
+async function loadSensors() {
+  if (state.sensorsLoading) {
+    return;
+  }
+  state.sensorsLoading = true;
+  setViewStatus("#sensors-status", "Loading...");
+  try {
+    state.sensorSnapshot = await invoke("get_sensor_snapshot");
+    renderSensors();
+  } catch (error) {
+    setViewStatus("#sensors-status", String(error), true);
+  } finally {
+    state.sensorsLoading = false;
+  }
+}
+
+function renderSensors() {
+  const snapshot = state.sensorSnapshot;
+  const zones = snapshot ? snapshot.thermal_zones : [];
+  const sensors = snapshot ? snapshot.sensors : [];
+
+  $("#thermal-status").textContent =
+    snapshot && snapshot.thermal_status !== null && snapshot.thermal_status !== undefined
+      ? `Thermal status ${snapshot.thermal_status}`
+      : "No thermal data";
+  setViewStatus("#sensors-status", snapshot ? "Live snapshot" : "--");
+  $("#sensors-count").textContent = `${sensors.length} sensors`;
+
+  $("#thermal-grid").innerHTML = zones.length
+    ? zones
+        .map(
+          (zone) => `
+            <div class="sensor-card">
+              <div class="sensor-name">${escapeHtml(zone.name)}</div>
+              <div class="sensor-type">${zone.status !== null && zone.status !== undefined ? `status ${zone.status}` : "thermal zone"}</div>
+              <div class="sensor-values">${formatNumber(zone.temperature_c, 1)} °C</div>
+            </div>
+          `
+        )
+        .join("")
+    : `<div class="sensor-card"><div class="sensor-name">No thermal zones reported</div><div class="sensor-type">The thermal HAL may be unavailable on this device</div></div>`;
+
+  $("#sensors-grid").innerHTML = sensors.length
+    ? sensors
+        .map(
+          (sensor) => `
+            <div class="sensor-card">
+              <div class="sensor-name">${escapeHtml(sensor.name)}</div>
+              <div class="sensor-type">${escapeHtml(sensor.type_name)}${sensor.wake_up ? " · wake-up" : ""}</div>
+              <div class="sensor-values">${sensor.values.length ? sensor.values.map((value) => formatNumber(value, 3)).join(", ") : "No recent events"}</div>
+              <div class="sensor-vendor">${escapeHtml(sensor.vendor)}</div>
+            </div>
+          `
+        )
+        .join("")
+    : `<div class="sensor-card"><div class="sensor-name">No sensors reported</div><div class="sensor-type">The sensor service did not return a sensor list</div></div>`;
+}
+
+function formatDuration(milliseconds) {
+  if (!Number.isFinite(milliseconds) || milliseconds < 0) {
+    return "--";
+  }
+  const total = Math.round(milliseconds / 1000);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  if (hours) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+}
+
+function setupSessions() {
+  $("#session-toggle").addEventListener("click", toggleSession);
+  $("#sessions-refresh").addEventListener("click", () => {
+    refreshSessionStatus();
+    loadSessions();
+  });
+  $("#sessions-list").addEventListener("click", (event) => {
+    const viewButton = event.target.closest("[data-session-view]");
+    if (viewButton) {
+      openSession(viewButton.dataset.sessionView);
+      return;
+    }
+    const exportButton = event.target.closest("[data-session-export]");
+    if (exportButton) {
+      exportSession(exportButton.dataset.sessionExport, exportButton.dataset.format);
+    }
+  });
+}
+
+async function refreshSessionStatus() {
+  try {
+    state.sessionStatus = await invoke("get_session_status");
+    renderSessionStatus();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function renderSessionStatus() {
+  const status = state.sessionStatus;
+  const toggle = $("#session-toggle");
+  const label = $("#session-status");
+  if (!toggle || !label) {
+    return;
+  }
+
+  if (status) {
+    toggle.textContent = "Stop recording";
+    label.textContent = `Recording "${status.name}" · ${status.event_count} events`;
+    label.className = "session-status small recording";
+  } else {
+    toggle.textContent = "Start recording";
+    label.textContent = "Not recording";
+    label.className = "session-status muted small";
+  }
+}
+
+function setSessionMessage(text, isError = false) {
+  const label = $("#session-status");
+  if (!label) {
+    return;
+  }
+  label.textContent = text;
+  label.className = `session-status small${isError ? " error" : ""}`;
+}
+
+async function toggleSession() {
+  const toggle = $("#session-toggle");
+  toggle.disabled = true;
+  try {
+    if (state.sessionStatus) {
+      const summary = await invoke("stop_session");
+      state.sessionStatus = null;
+      renderSessionStatus();
+      setSessionMessage(`Saved "${summary.name}" with ${summary.event_count} events`);
+      await loadSessions();
+    } else {
+      const name = $("#session-name").value.trim();
+      const summary = await invoke("start_session", { name: name || null });
+      state.sessionStatus = summary;
+      $("#session-name").value = "";
+      renderSessionStatus();
+    }
+  } catch (error) {
+    setSessionMessage(String(error), true);
+  } finally {
+    toggle.disabled = false;
+  }
+}
+
+async function loadSessions() {
+  if (state.sessionsLoading) {
+    return;
+  }
+  state.sessionsLoading = true;
+  try {
+    state.sessions = await invoke("list_sessions");
+    renderSessions();
+  } catch (error) {
+    $("#sessions-list").innerHTML = `<div class="empty-state">${escapeHtml(String(error))}</div>`;
+  } finally {
+    state.sessionsLoading = false;
+  }
+}
+
+function renderSessions() {
+  const sessions = state.sessions;
+  $("#sessions-count").textContent = `${sessions.length} sessions`;
+
+  if (!sessions.length) {
+    $("#sessions-list").innerHTML = `<div class="empty-state">No recorded sessions yet. Start recording to capture device telemetry.</div>`;
+    return;
+  }
+
+  $("#sessions-list").innerHTML = sessions
+    .map((session) => {
+      const start = new Date(session.started_at);
+      const end = session.ended_at ? new Date(session.ended_at) : null;
+      const duration = end ? formatDuration(end.getTime() - start.getTime()) : "recording";
+      return `
+        <div class="list-item session-item">
+          <div>
+            <div class="title">${escapeHtml(session.name)}</div>
+            <div class="sub">${escapeHtml(start.toLocaleString())} · ${escapeHtml(duration)} · ${session.event_count} events</div>
+          </div>
+          <div class="row-actions session-actions">
+            <button class="btn secondary" type="button" data-session-view="${escapeHtml(session.id)}">View events</button>
+            <button class="btn secondary" type="button" data-session-export="${escapeHtml(session.id)}" data-format="csv">CSV</button>
+            <button class="btn secondary" type="button" data-session-export="${escapeHtml(session.id)}" data-format="json">JSON</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+async function openSession(id) {
+  try {
+    const session = await invoke("get_session", { id });
+    state.events = session.events.slice().reverse();
+    $("#events-search").value = "";
+    $("#events-category").value = "all categories";
+    renderEvents();
+    setView("events");
+  } catch (error) {
+    setSessionMessage(String(error), true);
+  }
+}
+
+async function exportSession(id, format) {
+  try {
+    const result = await invoke("export_session", { id, format });
+    setSessionMessage(`Exported ${result.events} events to ${result.path}`);
+  } catch (error) {
+    setSessionMessage(String(error), true);
+  }
+}
+
+function setupLogs() {
+  $("#logs-toggle").addEventListener("click", toggleDeviceLogs);
+  $("#logs-clear").addEventListener("click", () => {
+    $("#logs-output").textContent = "";
+  });
+}
+
+async function toggleDeviceLogs() {
+  if (state.deviceLogs.active) {
+    await stopDeviceLogs();
+  } else {
+    await startDeviceLogs();
+  }
+}
+
+async function startDeviceLogs() {
+  const session = Date.now();
+  state.deviceLogs = { session, active: true };
+  $("#logs-output").textContent = "";
+  $("#logs-toggle").textContent = "Stop";
+  setViewStatus("#logs-status", "● Streaming");
+
+  try {
+    await invoke("start_device_logs", {
+      session,
+      buffer: $("#logs-buffer").value,
+      level: $("#logs-level").value,
+      tag: $("#logs-tag").value,
+    });
+  } catch (error) {
+    state.deviceLogs.active = false;
+    $("#logs-toggle").textContent = "Start";
+    setViewStatus("#logs-status", String(error), true);
+  }
+}
+
+async function stopDeviceLogs() {
+  state.deviceLogs.active = false;
+  $("#logs-toggle").textContent = "Start";
+  setViewStatus("#logs-status", "● Stopped");
+  try {
+    await invoke("stop_device_logs");
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function appendDeviceLog(line) {
+  const output = $("#logs-output");
+  output.append(document.createTextNode(`${line}\n`));
+  while (output.childNodes.length > 4000) {
+    output.removeChild(output.firstChild);
+  }
+  output.scrollTop = output.scrollHeight;
+}
+
+async function listenDeviceLogs() {
+  if (!window.__TAURI__ || !window.__TAURI__.event) {
+    return;
+  }
+
+  await window.__TAURI__.event.listen("device-log", (event) => {
+    const payload = event.payload;
+    if (!payload || !state.deviceLogs.active || payload.session !== state.deviceLogs.session) {
+      return;
+    }
+    appendDeviceLog(payload.line);
+  });
+
+  await window.__TAURI__.event.listen("device-log-end", (event) => {
+    const payload = event.payload;
+    if (!payload || payload.session !== state.deviceLogs.session) {
+      return;
+    }
+    state.deviceLogs.active = false;
+    $("#logs-toggle").textContent = "Start";
+    setViewStatus("#logs-status", "● Stream ended");
+  });
 }
 
 let eventsFrame = null;
@@ -2085,6 +2588,11 @@ function handleMetric(event) {
   }
   scheduleEventsRender();
 
+  if (state.sessionStatus && $("#view-sessions").classList.contains("active")) {
+    state.sessionStatus.event_count += 1;
+    renderSessionStatus();
+  }
+
   const { category, source, metric, value } = event;
 
   if (category === "device") {
@@ -2139,13 +2647,16 @@ document.addEventListener("DOMContentLoaded", () => {
   setupShell();
   setupFilesystem();
   setupApps();
+  setupSessions();
+  setupLogs();
   setupConfirmDialog();
   setupCharts();
-  renderSensors();
   renderSessions();
+  renderSessionStatus();
   renderEvents();
   listenMetrics().catch((error) => console.error(error));
   listenAppLogs().catch((error) => console.error(error));
+  listenDeviceLogs().catch((error) => console.error(error));
   refreshDevices();
 });
 

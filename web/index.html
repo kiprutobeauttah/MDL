@@ -50,6 +50,10 @@
               <div class="nav-sep"></div>
               <div class="nav-section">DEVICE</div>
               <button class="nav-btn" data-view="apps" data-icon="package">Applications</button>
+              <button class="nav-btn" data-view="notifications" data-icon="bell">Notifications</button>
+              <button class="nav-btn" data-view="activity" data-icon="layers">Activity</button>
+              <button class="nav-btn" data-view="usage" data-icon="bar-chart-2">App usage</button>
+              <button class="nav-btn" data-view="power" data-icon="zap">Power</button>
               <button class="nav-btn" data-view="sensors" data-icon="compass">Sensors</button>
               <button class="nav-btn" data-view="battery" data-icon="battery">Battery</button>
               <button class="nav-btn" data-view="performance" data-icon="cpu">Performance</button>
@@ -58,6 +62,7 @@
 
               <div class="nav-sep"></div>
               <div class="nav-section">TOOLS</div>
+              <button class="nav-btn" data-view="logs" data-icon="terminal">Logcat</button>
               <button class="nav-btn" data-view="shell" data-icon="terminal">Shell</button>
               <button class="nav-btn" data-view="filesystem" data-icon="folder">Filesystem</button>
 
@@ -380,9 +385,114 @@
               <div id="apps-list" class="list-card tall"></div>
             </section>
 
+            <section class="view" id="view-notifications">
+              <div class="page-header">
+                <h1 class="page-title">NOTIFICATIONS</h1>
+                <div class="shell-header-actions">
+                  <span id="notifications-status" class="status-text">--</span>
+                  <button id="notifications-refresh" class="btn" type="button">Refresh</button>
+                </div>
+              </div>
+              <p class="muted">Active notifications from the device notification service.</p>
+              <div id="notifications-list" class="list-card tall"></div>
+            </section>
+
+            <section class="view" id="view-activity">
+              <div class="page-header">
+                <h1 class="page-title">ACTIVITY</h1>
+                <div class="shell-header-actions">
+                  <span id="activity-status" class="status-text">--</span>
+                  <button id="activity-refresh" class="btn" type="button">Refresh</button>
+                </div>
+              </div>
+              <div class="metric-grid two compact">
+                <div class="metric-card">
+                  <div class="metric-label">FOREGROUND PACKAGE</div>
+                  <div class="metric-value small-value" id="activity-foreground">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">FOREGROUND ACTIVITY</div>
+                  <div class="metric-value small-value" id="activity-component">--</div>
+                </div>
+              </div>
+              <div class="list-head">
+                <div class="section-label">RECENT TASKS</div>
+                <span id="activity-task-count" class="muted">0 tasks</span>
+              </div>
+              <div id="activity-tasks" class="list-card tall"></div>
+            </section>
+
+            <section class="view" id="view-usage">
+              <div class="page-header">
+                <h1 class="page-title">APP USAGE</h1>
+                <div class="shell-header-actions">
+                  <span id="usage-status" class="status-text">--</span>
+                  <button id="usage-refresh" class="btn" type="button">Refresh</button>
+                </div>
+              </div>
+              <p class="muted">CPU and resident memory per process, sampled with dumpsys cpuinfo and meminfo.</p>
+              <div class="fs-table usage-table">
+                <div class="fs-header usage-header">
+                  <span>Process</span>
+                  <span>CPU</span>
+                  <span>PSS</span>
+                </div>
+                <div id="usage-list" class="fs-list usage-list" role="list"></div>
+              </div>
+            </section>
+
+            <section class="view" id="view-power">
+              <div class="page-header">
+                <h1 class="page-title">POWER</h1>
+                <div class="shell-header-actions">
+                  <span id="power-status" class="status-text">--</span>
+                  <button id="power-refresh" class="btn" type="button">Refresh</button>
+                </div>
+              </div>
+              <p class="muted">Wakefulness, doze state, battery saver and held wake locks.</p>
+              <div class="metric-grid two compact">
+                <div class="metric-card">
+                  <div class="metric-label">WAKEFULNESS</div>
+                  <div class="metric-value small-value" id="power-wakefulness">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">DOZE STATE</div>
+                  <div class="metric-value small-value" id="power-doze">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">BATTERY SAVER</div>
+                  <div class="metric-value small-value" id="power-saver">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">CHARGING</div>
+                  <div class="metric-value small-value" id="power-charging">--</div>
+                </div>
+              </div>
+              <div class="list-head">
+                <div class="section-label">WAKE LOCKS</div>
+                <span id="power-wakelock-count" class="muted">0 locks</span>
+              </div>
+              <div id="power-wakelocks" class="list-card"></div>
+            </section>
+
             <section class="view" id="view-sensors">
-              <h1 class="page-title">SENSORS</h1>
-              <p class="muted">Available device sensors with live readings</p>
+              <div class="page-header">
+                <h1 class="page-title">SENSORS</h1>
+                <div class="shell-header-actions">
+                  <span id="sensors-status" class="status-text">--</span>
+                  <button id="sensors-refresh" class="btn" type="button">Refresh</button>
+                </div>
+              </div>
+              <p class="muted">Thermal zones and latest sensor readings from the device sensor service.</p>
+              <div class="list-head">
+                <div class="section-label">THERMAL</div>
+                <span id="thermal-status" class="muted">--</span>
+              </div>
+              <div id="thermal-grid" class="sensor-grid"></div>
+              <div class="list-head">
+                <div class="section-label">SENSORS</div>
+                <span id="sensors-count" class="muted">0 sensors</span>
+              </div>
               <div id="sensors-grid" class="sensor-grid"></div>
             </section>
 
@@ -548,17 +658,52 @@
               </div>
             </section>
 
+            <section class="view" id="view-logs">
+              <div class="page-header">
+                <h1 class="page-title">LOGCAT</h1>
+                <div class="shell-header-actions">
+                  <span id="logs-status" class="status-text">● Stopped</span>
+                </div>
+              </div>
+              <p class="muted">Stream the device log buffer live. Filter by buffer, level and tag.</p>
+
+              <div class="logs-toolbar">
+                <select id="logs-buffer" class="input select">
+                  <option value="main">Main</option>
+                  <option value="system">System</option>
+                  <option value="crash">Crash</option>
+                  <option value="all">All buffers</option>
+                </select>
+                <select id="logs-level" class="input select">
+                  <option value="V">Verbose</option>
+                  <option value="D">Debug</option>
+                  <option value="I" selected>Info</option>
+                  <option value="W">Warn</option>
+                  <option value="E">Error</option>
+                  <option value="F">Fatal</option>
+                </select>
+                <input id="logs-tag" class="input" type="text" placeholder="Tag (optional)" spellcheck="false" />
+                <button id="logs-toggle" class="btn" type="button">Start</button>
+                <button id="logs-clear" class="btn secondary" type="button">Clear</button>
+              </div>
+
+              <pre id="logs-output" class="app-log-output logs-output"></pre>
+            </section>
+
             <section class="view" id="view-sessions">
               <div class="page-header">
                 <h1 class="page-title">SESSIONS</h1>
                 <span id="sessions-count" class="muted">0 sessions</span>
               </div>
-              <p class="muted">Monitoring sessions record device metrics for later analysis and replay</p>
+              <p class="muted">Record device telemetry into sessions you can browse, replay and export.</p>
 
-              <div class="row-actions start">
-                <button class="btn" id="new-session-btn">New Session</button>
-                <button class="btn" id="export-session-btn">Export</button>
+              <div class="search-row">
+                <input id="session-name" class="input" type="text" placeholder="Session name (optional)" />
+                <button class="btn" id="session-toggle" type="button">Start recording</button>
+                <button class="btn secondary" id="sessions-refresh" type="button">Refresh</button>
               </div>
+
+              <div id="session-status" class="session-status muted small">Not recording</div>
 
               <div id="sessions-list" class="list-card tall"></div>
             </section>
