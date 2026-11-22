@@ -1793,3 +1793,48 @@ select {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+.offline-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.offline-panel .section-label {
+  margin-bottom: 6px;
+}
+
+.offline-panel .muted {
+  margin: 0;
+}
+
+.offline-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.sidebar-connect {
+  width: 100%;
+  margin-top: auto;
+}
+
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.nav-btn:disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.status-dot.offline {
+  color: var(--yellow);
+}

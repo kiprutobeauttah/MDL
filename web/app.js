@@ -23,6 +23,7 @@ const ICONS = {
 };
 
 const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "svg", "avif"]);
+const OFFLINE_VIEWS = new Set(["sessions", "events"]);
 
 const SHELL_COMMANDS = [
   {
@@ -150,6 +151,591 @@ const SHELL_COMMANDS = [
     command: "dumpsys activity activities | head -n 40",
     description: "Show the current activity stack summary.",
   },
+  {
+    category: "Device & system",
+    command: "getprop ro.product.manufacturer",
+    description: "Show the device manufacturer.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.product.brand",
+    description: "Show the device brand name.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.product.device",
+    description: "Show the device codename.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.build.version.security_patch",
+    description: "Show the Android security patch level.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.build.fingerprint",
+    description: "Show the full build fingerprint.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.boot.hardware",
+    description: "Show the hardware platform name.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.product.cpu.abi",
+    description: "Show the primary CPU ABI.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop ro.serialno",
+    description: "Show the device serial number.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop | grep -i build",
+    description: "Show all build-related properties.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop | grep -i dalvik",
+    description: "Show Dalvik and runtime properties.",
+  },
+  {
+    category: "Device & system",
+    command: "getprop | grep -i density",
+    description: "Show display density properties.",
+  },
+  {
+    category: "Device & system",
+    command: "date",
+    description: "Show the device date, time, and timezone.",
+  },
+  {
+    category: "Device & system",
+    command: "id",
+    description: "Show the current shell user and group IDs.",
+  },
+  {
+    category: "Device & system",
+    command: "ps -A",
+    description: "List all running processes.",
+  },
+  {
+    category: "Device & system",
+    command: "cat /proc/version",
+    description: "Show the kernel version and build details.",
+  },
+  {
+    category: "Device & system",
+    command: "cat /proc/cpuinfo",
+    description: "Show CPU model, cores, and feature flags.",
+  },
+  {
+    category: "Device & system",
+    command: "cat /proc/meminfo",
+    description: "Show detailed kernel memory statistics.",
+  },
+  {
+    category: "Device & system",
+    command: "free -h",
+    description: "Show used and available memory in human-readable units.",
+  },
+  {
+    category: "Device & system",
+    command: "vmstat 1 3",
+    description: "Sample virtual memory and CPU activity three times.",
+  },
+  {
+    category: "Device & system",
+    command: "getenforce",
+    description: "Show the SELinux enforcement mode.",
+  },
+  {
+    category: "Device & system",
+    command: "settings list system",
+    description: "List all system settings.",
+  },
+  {
+    category: "Device & system",
+    command: "settings list secure",
+    description: "List all secure settings.",
+  },
+  {
+    category: "Device & system",
+    command: "settings list global",
+    description: "List all global settings.",
+  },
+  {
+    category: "Device & system",
+    command: "wm density",
+    description: "Show the physical and override display density.",
+  },
+  {
+    category: "Device & system",
+    command: "dumpsys SurfaceFlinger --list",
+    description: "List layers known to SurfaceFlinger.",
+  },
+  {
+    category: "Device & system",
+    command: "service list",
+    description: "List registered Android system services.",
+  },
+  {
+    category: "Device & system",
+    command: "dumpsys usb",
+    description: "Show USB device and port state.",
+  },
+  {
+    category: "Device & system",
+    command: "dumpsys input",
+    description: "Show input devices, keyboards, and touch state.",
+  },
+  {
+    category: "Device & system",
+    command: "dumpsys display",
+    description: "Show display and brightness state.",
+  },
+  {
+    category: "Device & system",
+    command: "dumpsys window displays",
+    description: "Show window manager display information.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys batterystats --charged",
+    description: "Show battery statistics since the last full charge.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys batterystats --unplugged",
+    description: "Show battery statistics since the device was unplugged.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys power",
+    description: "Show wakefulness, wake locks, and power state.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys deviceidle",
+    description: "Show doze and device-idle state.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys thermalservice",
+    description: "Show thermal status and temperature zones.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys alarm",
+    description: "Show scheduled alarms and their owners.",
+  },
+  {
+    category: "Battery & power",
+    command: "dumpsys jobscheduler",
+    description: "Show scheduled jobs and their constraints.",
+  },
+  {
+    category: "Battery & power",
+    command: "settings get global low_power",
+    description: "Show whether battery saver is enabled.",
+  },
+  {
+    category: "Battery & power",
+    command: "settings get global stay_on_while_plugged_in",
+    description: "Show the stay-awake charging setting.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys meminfo <package>",
+    description: "Show memory usage for a specific package.",
+  },
+  {
+    category: "Performance",
+    command: "top -H -n 1 -b",
+    description: "Show a one-shot snapshot with per-thread CPU usage.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys gfxinfo <package>",
+    description: "Show graphics frame timing for a package.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys gfxinfo <package> framestats",
+    description: "Show detailed frame statistics for a package.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys procstats",
+    description: "Show process runtime and memory statistics.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys diskstats",
+    description: "Show disk I/O and storage statistics.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys SurfaceFlinger",
+    description: "Show SurfaceFlinger composition and frame data.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys media.player",
+    description: "Show active media players and playback state.",
+  },
+  {
+    category: "Performance",
+    command: "dumpsys media.audio_flinger",
+    description: "Show audio mixer and track information.",
+  },
+  {
+    category: "Network",
+    command: "ip addr",
+    description: "Show all network interfaces and addresses.",
+  },
+  {
+    category: "Network",
+    command: "ip route",
+    description: "Show the device routing table.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys connectivity",
+    description: "Show connectivity networks and their state.",
+  },
+  {
+    category: "Network",
+    command: "cmd wifi status",
+    description: "Show current Wi-Fi status using the wifi command.",
+  },
+  {
+    category: "Network",
+    command: "cmd wifi list-networks",
+    description: "List saved Wi-Fi networks.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys netstats",
+    description: "Show network traffic statistics.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys netpolicy",
+    description: "Show network policy and restriction state.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys nfc",
+    description: "Show NFC adapter and tag state.",
+  },
+  {
+    category: "Network",
+    command: "dumpsys location",
+    description: "Show location providers and recent fixes.",
+  },
+  {
+    category: "Network",
+    command: "settings get global airplane_mode_on",
+    description: "Show whether airplane mode is enabled.",
+  },
+  {
+    category: "Network",
+    command: "settings get global wifi_on",
+    description: "Show whether Wi-Fi is enabled.",
+  },
+  {
+    category: "Network",
+    command: "settings get global mobile_data",
+    description: "Show whether mobile data is enabled.",
+  },
+  {
+    category: "Network",
+    command: "ping -c 4 google.com",
+    description: "Test DNS resolution and internet latency.",
+  },
+  {
+    category: "Network",
+    command: "getprop | grep -i dns",
+    description: "Show configured DNS properties.",
+  },
+  {
+    category: "Applications",
+    command: "pm list packages -s",
+    description: "List system packages.",
+  },
+  {
+    category: "Applications",
+    command: "pm list packages -d",
+    description: "List disabled packages.",
+  },
+  {
+    category: "Applications",
+    command: "pm list packages -f",
+    description: "List packages with their APK paths.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys package <package>",
+    description: "Show full package manager details.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys package <package> | grep -A 40 \"runtime permissions\"",
+    description: "Show runtime permission grants for a package.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys package <package> | grep -A 20 \"requested permissions\"",
+    description: "Show requested permissions for a package.",
+  },
+  {
+    category: "Applications",
+    command: "cmd package resolve-activity --brief -c android.intent.category.LAUNCHER <package>",
+    description: "Resolve the launcher activity for a package.",
+  },
+  {
+    category: "Applications",
+    command: "am start -W -n <package>/<activity>",
+    description: "Launch a specific activity and wait for the result.",
+  },
+  {
+    category: "Applications",
+    command: "am force-stop <package>",
+    description: "Force stop a package and all of its processes.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys notification --noredact",
+    description: "Show active notifications without redaction.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys activity processes",
+    description: "Show process records managed by the activity manager.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys activity services",
+    description: "Show running and bound services.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys activity providers",
+    description: "Show content providers and their clients.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys activity broadcasts",
+    description: "Show registered broadcast receivers.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys activity recents",
+    description: "Show recent tasks and activities.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys activity top",
+    description: "Show the top activity and its state.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys window",
+    description: "Show window manager state and focus.",
+  },
+  {
+    category: "Applications",
+    command: "dumpsys window windows",
+    description: "Show details for every window.",
+  },
+  {
+    category: "Sensors & thermal",
+    command: "dumpsys sensorservice",
+    description: "Show the sensor list and recent sensor events.",
+  },
+  {
+    category: "Sensors & thermal",
+    command: "dumpsys sensorservice | head -n 80",
+    description: "Show the first part of the sensor service dump.",
+  },
+  {
+    category: "Sensors & thermal",
+    command: "dumpsys sensorservice | grep -i \"active\"",
+    description: "Show active sensor connections.",
+  },
+  {
+    category: "Sensors & thermal",
+    command: "dumpsys thermalservice",
+    description: "Show thermal status, zones, and cooling devices.",
+  },
+  {
+    category: "Files",
+    command: "ls -la /sdcard/Download",
+    description: "List files in the shared Downloads folder.",
+  },
+  {
+    category: "Files",
+    command: "ls -la /sdcard/DCIM",
+    description: "List files in the camera folder.",
+  },
+  {
+    category: "Files",
+    command: "du -sh /sdcard/*",
+    description: "Show the size of each item in shared storage.",
+  },
+  {
+    category: "Files",
+    command: "cat /proc/mounts",
+    description: "Show mounted filesystems and mount options.",
+  },
+  {
+    category: "Files",
+    command: "find /sdcard -maxdepth 2 -type d | head -n 40",
+    description: "List shared-storage directories two levels deep.",
+  },
+  {
+    category: "Files",
+    command: "stat /sdcard",
+    description: "Show metadata for the shared storage path.",
+  },
+  {
+    category: "Files",
+    command: "ls -la /system/app | head -n 40",
+    description: "List system applications.",
+  },
+  {
+    category: "Files",
+    command: "ls -la /data/app",
+    description: "List installed application directories.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "logcat -d -b crash",
+    description: "Print the crash log buffer and exit.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "logcat -d -b system -t 200",
+    description: "Print the last 200 system buffer lines.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "logcat -d -s AndroidRuntime:E",
+    description: "Show Android runtime errors and crashes.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "logcat -d -s ActivityManager:I",
+    description: "Show activity manager info-level logs.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "logcat -d -s PackageManager:I",
+    description: "Show package manager info-level logs.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "logcat -c",
+    description: "Clear all log buffers.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "dumpsys dropbox --print",
+    description: "Print recent DropBox crash and error entries.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "dumpsys dropbox --print system_app_crash",
+    description: "Print recent app crash entries from DropBox.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "dumpsys dropbox --print system_server_crash",
+    description: "Print recent system server crash entries.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "dumpsys activity exit-info <package>",
+    description: "Show recent exit reasons for a package.",
+  },
+  {
+    category: "Logs & debugging",
+    command: "dumpsys activity lastanr",
+    description: "Show the last application-not-responding record.",
+  },
+  {
+    category: "Media & display",
+    command: "settings get system screen_off_timeout",
+    description: "Show the screen timeout in milliseconds.",
+  },
+  {
+    category: "Media & display",
+    command: "settings get system accelerometer_rotation",
+    description: "Show whether auto-rotate is enabled.",
+  },
+  {
+    category: "Media & display",
+    command: "settings get system user_rotation",
+    description: "Show the current user rotation setting.",
+  },
+  {
+    category: "Media & display",
+    command: "dumpsys media.camera",
+    description: "Show camera service and device state.",
+  },
+  {
+    category: "Media & display",
+    command: "dumpsys media.codec",
+    description: "Show media codec and codec-list state.",
+  },
+  {
+    category: "Media & display",
+    command: "dumpsys audio",
+    description: "Show audio focus, streams, and volume state.",
+  },
+  {
+    category: "Security & permissions",
+    command: "dumpsys device_policy",
+    description: "Show device administrator policies.",
+  },
+  {
+    category: "Security & permissions",
+    command: "dumpsys trust",
+    description: "Show trust agents and trust state.",
+  },
+  {
+    category: "Security & permissions",
+    command: "settings get global adb_enabled",
+    description: "Show whether ADB is enabled.",
+  },
+  {
+    category: "Security & permissions",
+    command: "settings get secure install_non_market_apps",
+    description: "Show the unknown-sources install setting.",
+  },
+  {
+    category: "Security & permissions",
+    command: "dumpsys lock_settings",
+    description: "Show lock screen and credential settings.",
+  },
+  {
+    category: "Storage",
+    command: "dumpsys storaged",
+    description: "Show storage I/O and usage statistics.",
+  },
+  {
+    category: "Storage",
+    command: "sm list-volumes",
+    description: "List mounted storage volumes.",
+  },
+  {
+    category: "Storage",
+    command: "ls -la /storage/emulated/0",
+    description: "List the primary emulated storage root.",
+  },
 ];
 
 const CHARTS = [];
@@ -203,6 +789,7 @@ const state = {
   sessions: [],
   sessionsLoading: false,
   sessionStatus: null,
+  offline: false,
   viewTimers: {},
 };
 
@@ -470,6 +1057,9 @@ function clearViewTimers() {
 }
 
 function setView(view) {
+  if (state.offline && !OFFLINE_VIEWS.has(view)) {
+    view = "sessions";
+  }
   $$(".nav-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === view);
   });
@@ -510,6 +1100,69 @@ function setView(view) {
 function setupConnection() {
   $("#refresh-btn").addEventListener("click", refreshDevices);
   $("#connect-btn").addEventListener("click", connectDevice);
+  $("#offline-sessions-btn").addEventListener("click", () => enterOfflineMode());
+  $("#offline-connect-btn").addEventListener("click", exitOfflineMode);
+}
+
+async function refreshOfflineSessions() {
+  const label = $("#offline-session-count");
+  if (!label) {
+    return;
+  }
+  try {
+    const sessions = await invoke("list_sessions");
+    label.textContent = sessions.length
+      ? `${sessions.length} saved session${sessions.length === 1 ? "" : "s"} available`
+      : "No saved sessions yet";
+  } catch (error) {
+    label.textContent = "Saved sessions unavailable";
+  }
+}
+
+function setOfflineMode(offline) {
+  state.offline = offline;
+  $$(".nav-btn").forEach((button) => {
+    const blocked = offline && !OFFLINE_VIEWS.has(button.dataset.view);
+    button.disabled = blocked;
+    if (blocked) {
+      button.title = "Connect a device to use this view";
+    } else {
+      button.removeAttribute("title");
+    }
+  });
+
+  $("#offline-connect-btn").classList.toggle("hidden", !offline);
+
+  const nameInput = $("#session-name");
+  const toggle = $("#session-toggle");
+  if (nameInput && toggle) {
+    nameInput.disabled = offline;
+    toggle.disabled = offline;
+    if (offline) {
+      nameInput.title = "Connect a device to record a session";
+      toggle.title = "Connect a device to record a session";
+    } else {
+      nameInput.removeAttribute("title");
+      toggle.removeAttribute("title");
+    }
+  }
+}
+
+function enterOfflineMode() {
+  setOfflineMode(true);
+  $("#connection-screen").classList.add("hidden");
+  $("#app-screen").classList.remove("hidden");
+  setStatus("offline", "Offline - no device");
+  setView("sessions");
+}
+
+function exitOfflineMode() {
+  setOfflineMode(false);
+  $("#app-screen").classList.add("hidden");
+  $("#connection-screen").classList.remove("hidden");
+  setStatus("", "No device");
+  refreshOfflineSessions();
+  refreshDevices();
 }
 
 async function refreshDevices() {
@@ -589,7 +1242,9 @@ async function connectDevice() {
     state.device = { ...info };
     renderDeviceInfo();
     await invoke("start_monitoring");
+    setOfflineMode(false);
     refreshSessionStatus();
+    refreshOfflineSessions();
     $("#connection-screen").classList.add("hidden");
     $("#app-screen").classList.remove("hidden");
     setView("overview");
@@ -2125,6 +2780,13 @@ function renderSessionStatus() {
     return;
   }
 
+  if (state.offline) {
+    toggle.textContent = "Start recording";
+    label.textContent = "Offline mode · recording requires a device";
+    label.className = "session-status muted small";
+    return;
+  }
+
   if (status) {
     toggle.textContent = "Stop recording";
     label.textContent = `Recording "${status.name}" · ${status.event_count} events`;
@@ -2658,6 +3320,7 @@ document.addEventListener("DOMContentLoaded", () => {
   listenAppLogs().catch((error) => console.error(error));
   listenDeviceLogs().catch((error) => console.error(error));
   refreshDevices();
+  refreshOfflineSessions();
 });
 
 window.addEventListener("resize", () => {

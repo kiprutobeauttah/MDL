@@ -29,6 +29,17 @@
               <button id="refresh-btn" class="btn">Refresh</button>
               <button id="connect-btn" class="btn" disabled>Connect</button>
             </div>
+
+            <div class="offline-panel">
+              <div>
+                <p class="section-label">NO DEVICE CONNECTED?</p>
+                <p class="muted small">Browse and export sessions recorded on this computer. Live device tools require USB debugging.</p>
+              </div>
+              <div class="offline-actions">
+                <span id="offline-session-count" class="muted small">Checking saved sessions...</span>
+                <button id="offline-sessions-btn" class="btn secondary" type="button">Browse saved sessions</button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -72,6 +83,8 @@
               <button class="nav-btn" data-view="events" data-icon="file-text">Events</button>
               <button class="nav-btn" data-view="alerts" data-icon="alert-triangle">Alerts</button>
             </nav>
+
+            <button id="offline-connect-btn" class="btn secondary sidebar-connect hidden" type="button">Connect device</button>
           </aside>
 
           <main id="content">
@@ -782,7 +795,7 @@
         <span id="status-dot" class="status-dot">●</span>
         <span id="status-text">No device</span>
         <span class="spacer"></span>
-        <span class="version">v1.0.0 by Beauttah K.</span>
+        <span class="version">v1.1.0 by Beauttah K.</span>
       </footer>
     </div>
 
