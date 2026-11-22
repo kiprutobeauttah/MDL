@@ -1838,3 +1838,7 @@ select {
 .status-dot.offline {
   color: var(--yellow);
 }
+
+.offline-panel .offline-actions + .offline-actions {
+  margin-top: 4px;
+}

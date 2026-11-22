@@ -32,12 +32,17 @@
 
             <div class="offline-panel">
               <div>
-                <p class="section-label">NO DEVICE CONNECTED?</p>
-                <p class="muted small">Browse and export sessions recorded on this computer. Live device tools require USB debugging.</p>
+                <p class="section-label">NO USB DEBUGGING?</p>
+                <p class="muted small">Browse saved sessions, or view storage and USB status without ADB. Unlock the device and choose File Transfer/MTP mode for storage access.</p>
               </div>
               <div class="offline-actions">
                 <span id="offline-session-count" class="muted small">Checking saved sessions...</span>
                 <button id="offline-sessions-btn" class="btn secondary" type="button">Browse saved sessions</button>
+              </div>
+              <div class="offline-actions">
+                <span id="offline-usb-count" class="muted small">Checking USB...</span>
+                <button id="offline-usb-storage-btn" class="btn secondary" type="button">Browse USB storage</button>
+                <button id="offline-usb-status-btn" class="btn secondary" type="button">USB status</button>
               </div>
             </div>
           </div>
@@ -76,6 +81,8 @@
               <button class="nav-btn" data-view="logs" data-icon="terminal">Logcat</button>
               <button class="nav-btn" data-view="shell" data-icon="terminal">Shell</button>
               <button class="nav-btn" data-view="filesystem" data-icon="folder">Filesystem</button>
+              <button class="nav-btn" data-view="usb-storage" data-icon="hard-drive">USB storage</button>
+              <button class="nav-btn" data-view="usb-status" data-icon="smartphone">USB status</button>
 
               <div class="nav-sep"></div>
               <div class="nav-section">ANALYSIS</div>
@@ -671,6 +678,85 @@
               </div>
             </section>
 
+            <section class="view" id="view-usb-status">
+              <div class="page-header">
+                <h1 class="page-title">USB STATUS</h1>
+                <div class="shell-header-actions">
+                  <span id="usb-status-status" class="status-text">--</span>
+                  <button id="usb-status-refresh" class="btn" type="button">Refresh</button>
+                </div>
+              </div>
+              <p class="muted">USB devices and mounted MTP storage available without USB debugging.</p>
+
+              <div class="metric-grid two compact">
+                <div class="metric-card">
+                  <div class="metric-label">PLATFORM</div>
+                  <div class="metric-value small-value" id="usb-status-platform">--</div>
+                </div>
+                <div class="metric-card">
+                  <div class="metric-label">MTP MOUNTS</div>
+                  <div class="metric-value small-value" id="usb-status-mount-count">--</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <p id="usb-status-message" class="muted small">--</p>
+              </div>
+
+              <div class="list-head">
+                <div class="section-label">MTP STORAGE</div>
+              </div>
+              <div id="usb-mtp-roots" class="list-card"></div>
+
+              <div class="list-head">
+                <div class="section-label">USB DEVICES</div>
+                <span id="usb-device-count" class="muted">0 devices</span>
+              </div>
+              <div id="usb-devices" class="list-card tall"></div>
+            </section>
+
+            <section class="view" id="view-usb-storage">
+              <div class="page-header">
+                <h1 class="page-title">USB STORAGE</h1>
+                <span id="usb-storage-status" class="status-text">--</span>
+              </div>
+              <p class="muted">Browse accessible files on an MTP-mounted device. USB debugging is not required.</p>
+
+              <div class="fs-toolbar">
+                <button id="usb-storage-up" class="btn secondary icon-btn" type="button" title="Parent folder">&#8593;</button>
+                <button id="usb-storage-refresh" class="btn secondary icon-btn" type="button" title="Refresh">&#8635;</button>
+                <input id="usb-storage-path" class="input fs-path-input" type="text" spellcheck="false" autocomplete="off" />
+                <button id="usb-storage-go" class="btn" type="button">Go</button>
+              </div>
+
+              <div id="usb-storage-breadcrumb" class="fs-breadcrumb"></div>
+
+              <div class="fs-shortcuts">
+                <button class="chip" type="button" data-usb-folder="">Device root</button>
+                <button class="chip" type="button" data-usb-folder="DCIM">DCIM</button>
+                <button class="chip" type="button" data-usb-folder="Download">Download</button>
+                <button class="chip" type="button" data-usb-folder="Pictures">Pictures</button>
+                <button class="chip" type="button" data-usb-folder="Movies">Movies</button>
+                <button class="chip" type="button" data-usb-folder="Documents">Documents</button>
+                <button class="chip" type="button" data-usb-folder="Music">Music</button>
+              </div>
+
+              <div class="fs-table">
+                <div class="fs-header">
+                  <span>Name</span>
+                  <span>Size</span>
+                  <span>Modified</span>
+                  <span>Permissions</span>
+                </div>
+                <div id="usb-storage-list" class="fs-list" role="list"></div>
+              </div>
+
+              <div class="fs-footer">
+                <span id="usb-storage-count">0 items</span>
+                <span id="usb-storage-error" class="fs-error"></span>
+              </div>
+            </section>
+
             <section class="view" id="view-logs">
               <div class="page-header">
                 <h1 class="page-title">LOGCAT</h1>
@@ -795,7 +881,7 @@
         <span id="status-dot" class="status-dot">●</span>
         <span id="status-text">No device</span>
         <span class="spacer"></span>
-        <span class="version">v1.1.0 by Beauttah K.</span>
+        <span class="version">v1.2.0 by Beauttah K.</span>
       </footer>
     </div>
 

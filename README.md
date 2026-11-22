@@ -86,7 +86,7 @@ Rust sources live in `src-tauri/src/`, and the frontend lives in `web/`.
 
 Collectors currently cover device information, battery, performance, network diagnostics, Wi-Fi, cellular, Bluetooth, and installed applications. Inspection tools add live logcat, notifications, foreground activity and task stack, power/doze and wake locks, per-app CPU and memory, thermal zones and sensor snapshots, plus recordable sessions that can be exported to CSV or JSON.
 
-Saved sessions can be browsed, replayed, and exported from the connection screen without a device attached. Live device views require an authorized ADB connection.
+Saved sessions can be browsed, replayed, and exported from the connection screen without a device attached. USB storage and USB device status are also available without ADB on Linux when the device is unlocked and set to File Transfer/MTP mode. Live device views require an authorized ADB connection.
 
 ## Contributing
 

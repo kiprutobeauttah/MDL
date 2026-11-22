@@ -23,7 +23,7 @@ const ICONS = {
 };
 
 const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "jfif", "gif", "webp", "bmp", "svg", "avif"]);
-const OFFLINE_VIEWS = new Set(["sessions", "events"]);
+const OFFLINE_VIEWS = new Set(["sessions", "events", "usb-storage", "usb-status"]);
 
 const SHELL_COMMANDS = [
   {
@@ -790,6 +790,10 @@ const state = {
   sessionsLoading: false,
   sessionStatus: null,
   offline: false,
+  usbStatus: null,
+  usbLoading: false,
+  usbStoragePath: null,
+  usbStorageBusy: false,
   viewTimers: {},
 };
 
@@ -1089,6 +1093,10 @@ function setView(view) {
   } else if (view === "sessions") {
     refreshSessionStatus();
     loadSessions();
+  } else if (view === "usb-status") {
+    loadUsbStatus();
+  } else if (view === "usb-storage") {
+    loadUsbStorage();
   } else if (view === "shell") {
     focusShellInput();
   } else if (view === "filesystem" && !state.fsLoaded) {
@@ -1101,7 +1109,24 @@ function setupConnection() {
   $("#refresh-btn").addEventListener("click", refreshDevices);
   $("#connect-btn").addEventListener("click", connectDevice);
   $("#offline-sessions-btn").addEventListener("click", () => enterOfflineMode());
+  $("#offline-usb-storage-btn").addEventListener("click", () => enterOfflineMode("usb-storage"));
+  $("#offline-usb-status-btn").addEventListener("click", () => enterOfflineMode("usb-status"));
   $("#offline-connect-btn").addEventListener("click", exitOfflineMode);
+}
+
+async function refreshOfflineUsbStatus() {
+  const label = $("#offline-usb-count");
+  if (!label) {
+    return;
+  }
+  try {
+    const status = await invoke("get_usb_status");
+    label.textContent = status.mtp_roots.length
+      ? `${status.mtp_roots.length} MTP storage location${status.mtp_roots.length === 1 ? "" : "s"} detected`
+      : "No MTP storage detected";
+  } catch (error) {
+    label.textContent = "USB status unavailable";
+  }
 }
 
 async function refreshOfflineSessions() {
@@ -1148,12 +1173,12 @@ function setOfflineMode(offline) {
   }
 }
 
-function enterOfflineMode() {
+function enterOfflineMode(view = "sessions") {
   setOfflineMode(true);
   $("#connection-screen").classList.add("hidden");
   $("#app-screen").classList.remove("hidden");
   setStatus("offline", "Offline - no device");
-  setView("sessions");
+  setView(view);
 }
 
 function exitOfflineMode() {
@@ -1162,6 +1187,7 @@ function exitOfflineMode() {
   $("#connection-screen").classList.remove("hidden");
   setStatus("", "No device");
   refreshOfflineSessions();
+  refreshOfflineUsbStatus();
   refreshDevices();
 }
 
@@ -1245,6 +1271,7 @@ async function connectDevice() {
     setOfflineMode(false);
     refreshSessionStatus();
     refreshOfflineSessions();
+    refreshOfflineUsbStatus();
     $("#connection-screen").classList.add("hidden");
     $("#app-screen").classList.remove("hidden");
     setView("overview");
@@ -2130,6 +2157,270 @@ function renderApps() {
       `
     )
     .join("");
+}
+
+function setupUsb() {
+  $("#usb-status-refresh").addEventListener("click", loadUsbStatus);
+  $("#usb-storage-refresh").addEventListener("click", () => loadUsbStorage());
+  $("#usb-storage-go").addEventListener("click", () => loadUsbStorage($("#usb-storage-path").value.trim()));
+  $("#usb-storage-up").addEventListener("click", () => {
+    const current = state.usbStoragePath;
+    if (!current) {
+      return;
+    }
+    const root = currentUsbRoot();
+    if (root && (current === root || current === `${root}/`)) {
+      return;
+    }
+    loadUsbStorage(parentPath(current));
+  });
+
+  $$("[data-usb-folder]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const root = currentUsbRoot();
+      if (!root) {
+        loadUsbStatus();
+        return;
+      }
+      const folder = button.dataset.usbFolder;
+      loadUsbStorage(folder ? `${root}/${folder}` : root);
+    });
+  });
+
+  $("#usb-mtp-roots").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-usb-root]");
+    if (button) {
+      loadUsbStorage(button.dataset.usbRoot);
+    }
+  });
+
+  $("#usb-storage-breadcrumb").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-usb-crumb]");
+    if (button) {
+      loadUsbStorage(button.dataset.usbCrumb);
+    }
+  });
+}
+
+async function loadUsbStatus() {
+  if (state.usbLoading) {
+    return;
+  }
+  state.usbLoading = true;
+  setViewStatus("#usb-status-status", "Scanning...");
+  try {
+    state.usbStatus = await invoke("get_usb_status");
+    renderUsbStatus();
+  } catch (error) {
+    setViewStatus("#usb-status-status", String(error), true);
+  } finally {
+    state.usbLoading = false;
+  }
+}
+
+function renderUsbStatus() {
+  const status = state.usbStatus;
+  if (!status) {
+    return;
+  }
+
+  $("#usb-status-platform").textContent = status.platform || "--";
+  $("#usb-status-mount-count").textContent = String(status.mtp_roots.length);
+  $("#usb-status-message").textContent = status.message || "--";
+  $("#usb-device-count").textContent = `${status.devices.length} devices`;
+  setViewStatus("#usb-status-status", status.mtp_roots.length ? "MTP storage ready" : "No MTP mount");
+
+  const roots = $("#usb-mtp-roots");
+  roots.innerHTML = status.mtp_roots.length
+    ? status.mtp_roots
+        .map(
+          (root) => `
+            <div class="list-item">
+              <div>
+                <div class="title mono">${escapeHtml(root)}</div>
+                <div class="sub">MTP storage mount</div>
+              </div>
+              <button class="btn secondary" type="button" data-usb-root="${escapeHtml(root)}">Browse</button>
+            </div>
+          `
+        )
+        .join("")
+    : `<div class="empty-state">No MTP storage detected. Unlock the device and select File Transfer/MTP mode.</div>`;
+
+  const devices = $("#usb-devices");
+  devices.innerHTML = status.devices.length
+    ? status.devices
+        .map(
+          (device) => `
+            <div class="list-item">
+              <div>
+                <div class="title mono">${escapeHtml(device.id)}</div>
+                <div class="sub">${escapeHtml(device.location)}</div>
+              </div>
+              <div class="notification-meta">
+                <div class="sub">${escapeHtml(device.description)}</div>
+              </div>
+            </div>
+          `
+        )
+        .join("")
+    : `<div class="empty-state">No USB devices reported by this computer.</div>`;
+}
+
+async function loadUsbStorage(path) {
+  if (state.usbStorageBusy) {
+    return;
+  }
+
+  let target = path || state.usbStoragePath;
+  if (!target) {
+    if (!state.usbStatus) {
+      await loadUsbStatus();
+    }
+    target = state.usbStatus && state.usbStatus.mtp_roots.length ? state.usbStatus.mtp_roots[0] : null;
+  }
+  if (!target) {
+    setViewStatus("#usb-storage-status", "No MTP storage", true);
+    $("#usb-storage-error").textContent =
+      (state.usbStatus && state.usbStatus.message) || "Connect the device in File Transfer/MTP mode.";
+    return;
+  }
+
+  state.usbStorageBusy = true;
+  $("#usb-storage-error").textContent = "";
+  setViewStatus("#usb-storage-status", "Loading...");
+  try {
+    const listing = await invoke("list_mtp_directory", { path: target });
+    state.usbStoragePath = listing.path;
+    renderUsbStorage(listing);
+    setViewStatus("#usb-storage-status", `${listing.entries.length} items`);
+  } catch (error) {
+    $("#usb-storage-error").textContent = String(error);
+    setViewStatus("#usb-storage-status", "Error", true);
+  } finally {
+    state.usbStorageBusy = false;
+  }
+}
+
+function currentUsbRoot() {
+  const roots = (state.usbStatus && state.usbStatus.mtp_roots) || [];
+  const current = state.usbStoragePath || "";
+  return roots.find((root) => current === root || current.startsWith(`${root}/`)) || roots[0] || "";
+}
+
+function renderUsbBreadcrumb(path) {
+  const root = currentUsbRoot();
+  const relative = root && (path === root || path.startsWith(`${root}/`)) ? path.slice(root.length) : path;
+  const parts = relative.split("/").filter(Boolean);
+  let current = root || "";
+  const crumbs = [
+    `<button class="chip" type="button" data-usb-crumb="${escapeHtml(root || path)}">${escapeHtml(root ? "MTP device" : "/")}</button>`,
+  ];
+
+  for (const part of parts) {
+    current = current ? `${current}/${part}` : `/${part}`;
+    crumbs.push(`<button class="chip" type="button" data-usb-crumb="${escapeHtml(current)}">${escapeHtml(part)}</button>`);
+  }
+
+  $("#usb-storage-breadcrumb").innerHTML = crumbs.join("");
+}
+
+function renderUsbStorage(listing) {
+  $("#usb-storage-path").value = listing.path;
+  $("#usb-storage-count").textContent = `${listing.entries.length} items`;
+  renderUsbBreadcrumb(listing.path);
+
+  const list = $("#usb-storage-list");
+  list.innerHTML = "";
+
+  for (const entry of listing.entries) {
+    const row = document.createElement("div");
+    row.className = "fs-row";
+    row.setAttribute("role", "listitem");
+
+    const name = document.createElement("span");
+    name.className = "fs-name";
+    name.textContent = entry.name;
+    if (entry.is_link && entry.link_target) {
+      name.title = `→ ${entry.link_target}`;
+    }
+
+    const size = document.createElement("span");
+    size.className = "fs-size";
+    size.textContent = entry.is_dir ? "—" : formatFileSize(entry.size);
+
+    const modified = document.createElement("span");
+    modified.className = "fs-modified";
+    modified.textContent = entry.modified || "--";
+
+    const permissions = document.createElement("span");
+    permissions.className = "fs-perms";
+    permissions.textContent = entry.permissions || "--";
+
+    row.append(name, size, modified, permissions);
+    if (entry.is_dir) {
+      row.addEventListener("click", () => loadUsbStorage(entry.path));
+    } else if (isImageEntry(entry)) {
+      row.title = `${entry.name} — double-click to preview`;
+      row.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        openLocalImagePreview(entry.path, entry.name);
+      });
+    }
+    list.append(row);
+  }
+}
+
+async function openLocalImagePreview(path, name) {
+  const token = ++imagePreviewToken;
+  hideContextMenu();
+  $("#image-preview-title").textContent = name;
+  $("#image-preview-path").textContent = path;
+  const image = $("#image-preview-image");
+  const loading = $("#image-preview-loading");
+  const error = $("#image-preview-error");
+  image.classList.add("hidden");
+  image.removeAttribute("src");
+  image.alt = name;
+  error.textContent = "";
+  error.classList.add("hidden");
+  loading.textContent = "Loading image...";
+  loading.classList.remove("hidden");
+  $("#image-preview").classList.remove("hidden");
+  $("#image-preview").setAttribute("aria-hidden", "false");
+  $("#image-preview-close").focus();
+
+  try {
+    const preview = await invoke("read_local_image_preview", { path });
+    if (token !== imagePreviewToken) {
+      return;
+    }
+    image.onload = () => {
+      if (token !== imagePreviewToken) {
+        return;
+      }
+      loading.classList.add("hidden");
+      image.classList.remove("hidden");
+    };
+    image.onerror = () => {
+      if (token !== imagePreviewToken) {
+        return;
+      }
+      image.classList.add("hidden");
+      loading.classList.add("hidden");
+      error.textContent = "Unable to decode this image.";
+      error.classList.remove("hidden");
+    };
+    image.src = `data:${preview.mime};base64,${preview.data}`;
+  } catch (previewError) {
+    if (token !== imagePreviewToken) {
+      return;
+    }
+    image.classList.add("hidden");
+    loading.classList.add("hidden");
+    error.textContent = String(previewError);
+    error.classList.remove("hidden");
+  }
 }
 
 function setupApps() {
@@ -3319,8 +3610,10 @@ document.addEventListener("DOMContentLoaded", () => {
   listenMetrics().catch((error) => console.error(error));
   listenAppLogs().catch((error) => console.error(error));
   listenDeviceLogs().catch((error) => console.error(error));
+  setupUsb();
   refreshDevices();
   refreshOfflineSessions();
+  refreshOfflineUsbStatus();
 });
 
 window.addEventListener("resize", () => {

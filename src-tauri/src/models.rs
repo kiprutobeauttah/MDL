@@ -189,6 +189,24 @@ pub struct SensorSnapshot {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub struct UsbDevice {
+    pub id: String,
+    pub location: String,
+    pub description: String,
+    pub vendor: Option<String>,
+    pub product: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UsbStatus {
+    pub supported: bool,
+    pub platform: String,
+    pub devices: Vec<UsbDevice>,
+    pub mtp_roots: Vec<String>,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct StatusInfo {
     pub serial: Option<String>,
     pub monitoring: bool,

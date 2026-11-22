@@ -7,6 +7,7 @@ mod logcat;
 mod models;
 mod monitor;
 mod sessions;
+mod usb;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -19,7 +20,7 @@ use logcat::DeviceLogState;
 use models::{
     ActivityState, AppDetails, AppEntry, AppUsageEntry, DeviceEntry, DeviceInfo, DirectoryListing,
     ExportResult, ImagePreview, NotificationEntry, PowerReport, SensorSnapshot, SessionRecord,
-    SessionSummary, ShellOutput, StatusInfo,
+    SessionSummary, ShellOutput, StatusInfo, UsbStatus,
 };
 use sessions::SessionRecorder;
 
@@ -248,6 +249,27 @@ async fn get_sensor_snapshot(state: State<'_, AppState>) -> Result<SensorSnapsho
 }
 
 #[tauri::command]
+async fn get_usb_status() -> Result<UsbStatus, String> {
+    tauri::async_runtime::spawn_blocking(usb::status)
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn list_mtp_directory(path: String) -> Result<DirectoryListing, String> {
+    tauri::async_runtime::spawn_blocking(move || usb::list(&path))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+async fn read_local_image_preview(path: String) -> Result<ImagePreview, String> {
+    tauri::async_runtime::spawn_blocking(move || usb::image_preview(&path))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
 fn get_status(state: State<'_, AppState>) -> StatusInfo {
     StatusInfo {
         serial: state.adb.serial(),
@@ -330,6 +352,9 @@ pub fn run() {
             get_power_report,
             get_app_usage,
             get_sensor_snapshot,
+            get_usb_status,
+            list_mtp_directory,
+            read_local_image_preview,
             get_status,
             run_shell_command,
             list_directory,
