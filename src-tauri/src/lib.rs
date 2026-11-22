@@ -163,8 +163,15 @@ fn start_session(
 }
 
 #[tauri::command]
-fn stop_session(app: AppHandle, state: State<'_, AppState>) -> Result<SessionSummary, String> {
-    state.recorder.stop(&data_dir(&app)?)
+async fn stop_session(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<SessionSummary, String> {
+    let directory = data_dir(&app)?;
+    let recorder = Arc::clone(&state.recorder);
+    tauri::async_runtime::spawn_blocking(move || recorder.stop(&directory))
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
@@ -173,18 +180,31 @@ fn get_session_status(state: State<'_, AppState>) -> Option<SessionSummary> {
 }
 
 #[tauri::command]
-fn list_sessions(app: AppHandle) -> Result<Vec<SessionSummary>, String> {
-    Ok(SessionRecorder::list(&data_dir(&app)?))
+async fn list_sessions(app: AppHandle) -> Result<Vec<SessionSummary>, String> {
+    let directory = data_dir(&app)?;
+    tauri::async_runtime::spawn_blocking(move || SessionRecorder::list(&directory))
+        .await
+        .map_err(|error| error.to_string())
 }
 
 #[tauri::command]
-fn get_session(app: AppHandle, id: String) -> Result<SessionRecord, String> {
-    SessionRecorder::load(&data_dir(&app)?, &id)
+async fn get_session(app: AppHandle, id: String) -> Result<SessionRecord, String> {
+    let directory = data_dir(&app)?;
+    tauri::async_runtime::spawn_blocking(move || SessionRecorder::load(&directory, &id))
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]
-fn export_session(app: AppHandle, id: String, format: String) -> Result<ExportResult, String> {
-    SessionRecorder::export(&data_dir(&app)?, &id, &format)
+async fn export_session(
+    app: AppHandle,
+    id: String,
+    format: String,
+) -> Result<ExportResult, String> {
+    let directory = data_dir(&app)?;
+    tauri::async_runtime::spawn_blocking(move || SessionRecorder::export(&directory, &id, &format))
+        .await
+        .map_err(|error| error.to_string())?
 }
 
 #[tauri::command]

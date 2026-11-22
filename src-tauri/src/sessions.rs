@@ -62,14 +62,15 @@ impl SessionRecorder {
     }
 
     pub fn stop(&self, data_dir: &Path) -> Result<SessionSummary, String> {
-        let mut current = self
-            .current
-            .lock()
-            .map_err(|_| "Session recorder is unavailable".to_string())?;
-
-        let session = current
-            .take()
-            .ok_or_else(|| "No session is recording".to_string())?;
+        let session = {
+            let mut current = self
+                .current
+                .lock()
+                .map_err(|_| "Session recorder is unavailable".to_string())?;
+            current
+                .take()
+                .ok_or_else(|| "No session is recording".to_string())?
+        };
         let ended_at = Local::now().to_rfc3339();
         let record = SessionRecord {
             id: session.id.clone(),
@@ -80,12 +81,16 @@ impl SessionRecorder {
         };
 
         if let Err(error) = save(data_dir, &record) {
-            *current = Some(ActiveSession {
-                id: record.id,
-                name: record.name,
-                started_at: record.started_at,
-                events: record.events,
-            });
+            if let Ok(mut current) = self.current.lock() {
+                if current.is_none() {
+                    *current = Some(ActiveSession {
+                        id: record.id,
+                        name: record.name,
+                        started_at: record.started_at,
+                        events: record.events,
+                    });
+                }
+            }
             return Err(error);
         }
 
